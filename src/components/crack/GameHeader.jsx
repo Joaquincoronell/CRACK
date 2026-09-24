@@ -1,0 +1,4 @@
+import { CircleHelp, Image, Save } from 'lucide-react';
+export default function GameHeader({ playing, onRules, onPhotos, onHome, saveError }) {
+  return <header className="game-header"><button className="wordmark" aria-label="CRACK, inicio" onClick={onHome}>CRACK<span>®</span><i /></button><div className="header-divider" /><span className="header-caption">EL FÚTBOL SE JUEGA.<br />LA SUERTE SE SUBASTA.</span><nav>{playing ? <span className={'save-status ' + (saveError ? 'save-error' : '')}><Save size={13} />{saveError ? 'No se pudo guardar' : 'Guardado local'}</span> : <span className="header-local"><span className="pulse-dot" /> HECHO PARA JUGAR JUNTOS</span>}{!playing && <button onClick={onPhotos} className="header-link"><Image size={16} /><span>Fotos</span></button>}<button onClick={onRules} className="header-link"><CircleHelp size={17} /><span>Cómo jugar</span></button></nav></header>;
+}
