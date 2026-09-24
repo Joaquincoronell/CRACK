@@ -1,0 +1,10 @@
+import { byId, POSITIONS } from '@/components/crack/catalog';
+import { cardVisible } from '@/components/crack/engine';
+import PlayerCard from '@/components/crack/PlayerCard';
+import AuctionControls from '@/components/crack/AuctionControls';
+import Reveal from '@/components/crack/Reveal';
+import TeamPanel from '@/components/crack/TeamPanel';
+export default function Auction({ game, dispatch, photos }) {
+  const a = game.auction, player = byId(a.id), sold = game.teams.reduce((s, t) => s + t.squad.length, 0), visible = game.phase === 'reveal' || cardVisible(game);
+  return <main className="auction-page" data-phase={game.phase}><div className="round-strip"><span>EL MERCADO <i>/</i> SUBASTA {String(game.round).padStart(2, '0')}</span><span>{sold} / {game.teams.length * 11} FICHAJES <b>4–3–3</b></span></div>{game.notice && <div role="status" className="round-notice">{game.notice}</div>}<div className="auction-layout"><section className="auction-card-area"><div className="auction-position"><span className="pulse-dot" />{POSITIONS[player.position].name.toUpperCase()}<span>{game.phase === 'auction' && visible ? 'CARTA A LA VISTA' : '01 CARTA · 01 OPORTUNIDAD'}</span></div><PlayerCard key={a.id} player={player} photo={photos[a.id]} revealed={visible} /><p className="card-caption">{game.phase === 'reveal' ? 'La apuesta ya tiene nombre.' : visible ? 'La carta está a la vista. Puro cálculo.' : 'Una posición. Una silueta. Ninguna garantía.'}</p></section>{game.phase === 'reveal' ? <Reveal game={game} dispatch={dispatch} /> : <AuctionControls game={game} dispatch={dispatch} visible={visible} />}</div><div className="teams-heading"><h2>Los que se juegan todo.</h2><span>TOCÁ UN EQUIPO PARA VER SUS FICHAJES</span></div><section className="teams-grid" style={{ '--team-count': game.teams.length }}>{game.teams.map((t, i) => <TeamPanel key={i} team={t} index={i} active={game.phase === 'auction' && a.turn === i} leader={a.leader === i} excluded={game.phase === 'auction' && !a.active.includes(i)} />)}</section></main>;
+}
