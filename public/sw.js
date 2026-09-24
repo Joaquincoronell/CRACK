@@ -1,7 +1,7 @@
-const VERSION = 'crack-v2-ios';
+const VERSION = 'crack-v3';
 const APP_CACHE = `${VERSION}-app`;
 const IMAGE_CACHE = `${VERSION}-images`;
-const CORE = ['/', '/manifest.webmanifest', '/icons/icon-192.png', '/icons/icon-512.png', '/icons/apple-touch-icon.png'];
+const CORE = ['/', '/manifest.webmanifest', '/icons/icon.svg'];
 
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(APP_CACHE).then(cache => cache.addAll(CORE)).then(() => self.skipWaiting()));
