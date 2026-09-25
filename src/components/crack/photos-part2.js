@@ -5,7 +5,7 @@ export default {
   "Luis Advíncula": ["https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d6/Luis_Adv%C3%ADncula_Russia_2018.jpg/330px-Luis_Adv%C3%ADncula_Russia_2018.jpg", "https://commons.wikimedia.org/wiki/File:Luis_Adv%C3%ADncula_Russia_2018.jpg"],
   "Carlos Izquierdoz": ["https://thumb.wikimedia.org/wikipedia/commons/thumb/d/de/Carlos_Izquierdoz.jpg/330px-Carlos_Izquierdoz.jpg", "https://commons.wikimedia.org/wiki/File:Carlos_Izquierdoz.jpg"],
   "Claudio “Chiqui” Tapia": ["https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2f/Chiqui_Tapia_2020.png/330px-Chiqui_Tapia_2020.png", "https://commons.wikimedia.org/wiki/File:Chiqui_Tapia_2020.png"],
-  "Rodolfo D’Onofrio": ["https://statics.forbesargentina.com/2020/05/5ec55eb8ad7a5.jpg", "https://www.forbesargentina.com/negocios/rodolfo-donofrio-numeros-titulos-un-nuevo-monumental-n681/amp"],
+  "Rodolfo D’Onofrio": ["https://commons.wikimedia.org/wiki/Special:FilePath/Cristina%20Kirchner%20y%20Rodolfo%20D%27Onofrio.jpg?width=720", "https://commons.wikimedia.org/wiki/File:Cristina_Kirchner_y_Rodolfo_D%27Onofrio.jpg"],
   "Diego Maradona": ["https://thumb.wikimedia.org/wikipedia/commons/thumb/4/48/Argentina_celebrando_copa_%28cropped%29.jpg/330px-Argentina_celebrando_copa_%28cropped%29.jpg", "https://commons.wikimedia.org/wiki/File:Argentina_celebrando_copa_%28cropped%29.jpg"],
   "Zinedine Zidane": ["https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f3/Zinedine_Zidane_by_Tasnim_03.jpg/330px-Zinedine_Zidane_by_Tasnim_03.jpg", "https://commons.wikimedia.org/wiki/File:Zinedine_Zidane_by_Tasnim_03.jpg"],
   "Ronaldinho": ["https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e8/Ronaldinho_in_2019.jpg/330px-Ronaldinho_in_2019.jpg", "https://commons.wikimedia.org/wiki/File:Ronaldinho_in_2019.jpg"],
