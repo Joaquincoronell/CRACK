@@ -9,7 +9,7 @@ export default {
   "Sergio Romero": ["https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6f/SergioRomero.jpg/330px-SergioRomero.jpg", "https://commons.wikimedia.org/wiki/File:SergioRomero.jpg"],
   "Agustín Rossi": ["https://commons.wikimedia.org/wiki/Special:FilePath/Agust%C3%ADn_Rossi_%28futebolista%29.jpg?width=720", "https://commons.wikimedia.org/wiki/File:Agust%C3%ADn_Rossi_%28futebolista%29.jpg"],
   "José Luis Chilavert": ["https://upload.wikimedia.org/wikipedia/commons/f/f7/Chilavert_sanlorenzo.jpg", "https://commons.wikimedia.org/wiki/File:Chilavert_sanlorenzo.jpg"],
-  "San Alonso": ["", ""],
+  "San Alonso": ["/players/san-alonso.jpg", ""],
   "Paolo Maldini": ["https://thumb.wikimedia.org/wikipedia/commons/thumb/3/38/Paolo_Maldini_2009.jpg/330px-Paolo_Maldini_2009.jpg", "https://commons.wikimedia.org/wiki/File:Paolo_Maldini_2009.jpg"],
   "Cafú": ["https://thumb.wikimedia.org/wikipedia/commons/thumb/6/64/Cafu_-_26.02.2026_-_Cerim%C3%B4nia_de_apresenta%C3%A7%C3%A3o_das_ta%C3%A7as_da_Copa_do_Mundo_de_2026.jpg/330px-Cafu_-_26.02.2026_-_Cerim%C3%B4nia_de_apresenta%C3%A7%C3%A3o_das_ta%C3%A7as_da_Copa_do_Mundo_de_2026.jpg", "https://commons.wikimedia.org/wiki/File:Cafu_-_26.02.2026_-_Cerim%C3%B4nia_de_apresenta%C3%A7%C3%A3o_das_ta%C3%A7as_da_Copa_do_Mundo_de_2026.jpg"],
   "Roberto Carlos": ["https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a8/LS3_1288_%2853332367864%29_%28cropped%29.jpg/330px-LS3_1288_%2853332367864%29_%28cropped%29.jpg", "https://commons.wikimedia.org/wiki/File:LS3_1288_%2853332367864%29_%28cropped%29.jpg"],
