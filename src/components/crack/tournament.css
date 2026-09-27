@@ -11,3 +11,47 @@
 .sim-flash{text-align:center;padding:19px;border-bottom:1px solid #3b4932;animation:flash-in .3s ease}.sim-flash strong{display:block;font-family:'Arial Black',Impact,system-ui,sans-serif;font-size:20px}.sim-flash span{display:block;font-size:8px;margin-top:4px}.sim-flash.goal{background:#c1fa4111;color:#c1fa41}.sim-flash.save{background:#dec18411;color:#dec184}@keyframes flash-in{from{transform:scale(.95);opacity:0}to{transform:none;opacity:1}}
 .sim-final{text-align:center;border-top:1px solid #445239;padding:20px;background:#1d2419}.sim-final>strong{font-family:'Arial Black',Impact,system-ui,sans-serif;font-size:16px}.sim-final>p{font-size:8px!important;color:#849277;margin:4px 0 13px!important}.sim-final .primary-button{margin:auto;min-height:39px}
 @media(max-width:720px){.tournament{margin-top:42px;padding-top:32px}.tournament-heading h2{font-size:25px}.legend-cta{flex-direction:column;text-align:center}.legend-log{overflow:auto}.legend-match{min-width:500px}.sim-board{grid-template-columns:1fr 83px 1fr;padding:14px 8px}.sim-team strong{font-size:9px}.sim-score b{font-size:22px}.sim-moment{padding:19px 12px}.rival-card{padding:21px 13px}.rival-names{font-size:18px}.rival-stats{padding-left:0;padding-right:0}}
+
+
+/* Match simulation v2 */
+.difficulty-note{margin:0 0 14px!important;color:#839279;font-size:8px!important;line-height:1.55}
+.sim-meta{display:flex;justify-content:center;gap:16px;flex-wrap:wrap;padding:9px 12px;border-bottom:1px solid #2d3828;background:#11160f;color:#74836b;font-size:7px;letter-spacing:.45px}
+.sim-meta span{display:flex;align-items:center;gap:5px}
+.moment-title-row{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:6px;text-align:left}
+.moment-title-row>div{display:flex;flex-direction:column;gap:2px}
+.moment-title-row strong{font-family:'Arial Black',Impact,system-ui,sans-serif;font-size:21px;color:#dec184}
+.moment-kicker{font-size:7px;letter-spacing:1.1px;color:#c1fa41;text-transform:uppercase}
+.difficulty-chip{font-size:6px;letter-spacing:.8px;border:1px solid #657353;color:#aebd9f;padding:5px 7px;border-radius:999px;white-space:nowrap}
+.timing-label{font-size:7px;letter-spacing:1.2px;color:#ced8c5;margin:0 0 7px}
+.choice-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:15px}
+.choice-btn{min-height:48px;border:1px solid #526345;border-radius:5px;background:#141b11;color:#dce6d5;font-family:'Arial Black',Impact,system-ui,sans-serif;font-size:9px;letter-spacing:.45px;cursor:pointer;transition:transform .12s ease,border-color .12s ease,background .12s ease}
+.choice-btn:hover:not(:disabled){transform:translateY(-2px);border-color:#c1fa41;background:#1d2818}
+.choice-btn:disabled{opacity:.35;cursor:not-allowed}
+.choice-btn.keeper{border-color:#7a6941;background:#201d14;color:#dec184}
+.counter-grid .choice-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}
+.counter-grid .choice-btn small{font-family:system-ui,sans-serif;font-size:6px;color:#819078}
+.counter-grid .choice-btn.pressured{border-color:#7c4f45;background:#241512}
+.counter-grid .choice-btn.pressured small{color:#c78675}
+.reaction-cue{min-height:40px;display:flex;align-items:center;justify-content:center;margin:13px 0 4px;border:1px dashed #48583e;border-radius:5px;color:#75846b;font-family:'Arial Black',Impact,system-ui,sans-serif;font-size:12px;letter-spacing:1px}
+.reaction-cue.live{background:#c1fa4112;border-color:#c1fa41;color:#c1fa41;animation:reaction-pulse .3s ease infinite alternate}
+@keyframes reaction-pulse{from{transform:scale(.985)}to{transform:scale(1)}}
+.sim-moment.clutch{background:radial-gradient(circle at 50% 0,#3a2519,#211b15 58%,#181712);border-color:#8f6745}
+.clutch-banner{display:flex;align-items:center;justify-content:center;gap:6px;margin:-23px -24px 18px;padding:8px;background:#8e3f2826;border-bottom:1px solid #8e563d;color:#ffb991;font-family:'Arial Black',Impact,system-ui,sans-serif;font-size:8px;letter-spacing:1.1px;animation:clutch-glow .75s ease infinite alternate}
+@keyframes clutch-glow{from{background:#8e3f2818}to{background:#8e3f2838}}
+.shootout-box{padding:25px 24px 27px;text-align:center;background:radial-gradient(circle at 50% 10%,#2b2717,#171a13 68%);border-top:1px solid #6a5939}
+.shootout-head{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:12px;margin-bottom:22px;padding-bottom:12px;border-bottom:1px solid #4b4932}
+.shootout-head span{text-align:left;font-size:7px;letter-spacing:1.4px;color:#dec184}
+.shootout-head strong{font-family:'Arial Black',Impact,system-ui,sans-serif;font-size:30px;color:#fff}
+.shootout-head small{text-align:right;font-size:7px;color:#7e8975}
+.shootout-box h3{font-family:'Arial Black',Impact,system-ui,sans-serif;font-size:18px;margin:0 0 5px}
+.shootout-box p{font-size:9px!important;color:#96a28c;margin:0 0 14px!important}
+.shootout-track{margin-top:16px}
+.shootout-flash{font-family:'Arial Black',Impact,system-ui,sans-serif;font-size:28px;color:#c1fa41;padding:24px 0;animation:flash-in .25s ease}
+@media(max-width:720px){
+  .sim-meta{gap:9px;font-size:6px}
+  .moment-title-row strong{font-size:18px}
+  .choice-grid{gap:6px}
+  .choice-btn{font-size:8px;min-height:45px}
+  .clutch-banner{margin:-19px -12px 16px}
+  .shootout-box{padding:21px 12px 24px}
+}
