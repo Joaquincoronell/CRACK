@@ -64,9 +64,31 @@ export const LEGENDS = [
 export const ROUND_NAMES = ['Cuartos de final', 'Semifinal', 'Final'];
 export function buildTournament(state) {
   const spots = [0, 7, 3, 4], slots = new Array(8).fill(null);
-  standings(state.teams).forEach((s, i) => { slots[spots[i]] = { id: 'p' + s.index, name: s.team, stars: s.name, strength: teamStrength(state.teams[s.index]), isPlayer: true, scorers: state.teams[s.index].squad.map(p => ({ name: byId(p.id).name, rating: byId(p.id).rating })) }; });
+  standings(state.teams).forEach((s, i) => {
+    const roster = state.teams[s.index].squad.map(p => {
+      const player = byId(p.id);
+      return { name: player.name, rating: player.rating, position: player.position };
+    });
+    slots[spots[i]] = {
+      id: 'p' + s.index,
+      name: s.team,
+      stars: s.name,
+      strength: teamStrength(state.teams[s.index]),
+      isPlayer: true,
+      scorers: roster,
+      players: roster
+    };
+  });
   const legends = shuffle(LEGENDS);
-  for (let i = 0; i < 8; i++) if (!slots[i]) { const l = legends.pop(); slots[i] = { id: 'l' + l.name, name: l.name, stars: l.stars, strength: l.strength, isPlayer: false, scorers: l.stars.split(',').map(n => ({ name: n.trim(), rating: l.strength })) }; }
+  for (let i = 0; i < 8; i++) if (!slots[i]) {
+    const l = legends.pop();
+    const players = l.stars.split(',').map((n, index) => {
+      const name = n.trim();
+      const position = /Casillas|Barthez|Pumpido/i.test(name) ? 'ARQ' : index < 2 ? 'DEL' : index < 4 ? 'MED' : 'DEF';
+      return { name, rating: l.strength, position };
+    });
+    slots[i] = { id: 'l' + l.name, name: l.name, stars: l.stars, strength: l.strength, isPlayer: false, scorers: players, players };
+  }
   return { teams: slots, round: 0, results: [], champion: null };
 }
 export const aliveAtRoundStart = t => t.teams.filter(tm => !t.results.some(r => r.round < t.round && r.winner !== tm.id && (r.a === tm.id || r.b === tm.id)));
@@ -80,13 +102,30 @@ const pickScorer = t => {
   for (let i = 0; i < t.scorers.length; i++) { r -= weights[i]; if (r <= 0) return t.scorers[i].name; }
   return t.scorers[t.scorers.length - 1].name;
 };
-export function simulateMatch(a, b) {
+export function simulateMatch(a, b, options = {}) {
+  const interactive = !!options.interactive;
   const diff = a.strength - b.strength;
-  const goalsA = poisson(Math.max(.4, Math.min(3.4, 1.3 + diff / 9))), goalsB = poisson(Math.max(.4, Math.min(3.4, 1.3 - diff / 9)));
+  const base = interactive ? .72 : 1.3;
+  const divisor = interactive ? 14 : 9;
+  const maxGoals = interactive ? 2.1 : 3.4;
+  const goalsA = poisson(Math.max(.25, Math.min(maxGoals, base + diff / divisor)));
+  const goalsB = poisson(Math.max(.25, Math.min(maxGoals, base - diff / divisor)));
   const minutes = shuffle(Array.from({ length: 90 }, (_, i) => i + 1));
   let pens = null;
-  if (goalsA === goalsB) { let pa, pb; do { pa = 3 + Math.floor(Math.random() * 3); pb = 3 + Math.floor(Math.random() * 3); } while (pa === pb); pens = { a: pa, b: pb }; }
-  return { goalsA, goalsB, eventsA: minutes.slice(0, goalsA).sort((x, y) => x - y).map(minute => ({ minute, scorer: pickScorer(a) })), eventsB: minutes.slice(goalsA, goalsA + goalsB).sort((x, y) => x - y).map(minute => ({ minute, scorer: pickScorer(b) })), pens };
+  if (!interactive && goalsA === goalsB) {
+    let pa, pb;
+    do { pa = 3 + Math.floor(Math.random() * 3); pb = 3 + Math.floor(Math.random() * 3); } while (pa === pb);
+    pens = { a: pa, b: pb };
+  }
+  return {
+    goalsA,
+    goalsB,
+    eventsA: minutes.slice(0, goalsA).sort((x, y) => x - y).map(minute => ({ minute, scorer: pickScorer(a) })),
+    eventsB: minutes.slice(goalsA, goalsA + goalsB).sort((x, y) => x - y).map(minute => ({ minute, scorer: pickScorer(b) })),
+    pens,
+    interactive,
+    round: options.round ?? 0
+  };
 }
 export const teamStrength = team => team.squad.length ? team.squad.reduce((sum, p) => sum + byId(p.id).rating, 0) / team.squad.length : 0;
 export function botMove(state) {
