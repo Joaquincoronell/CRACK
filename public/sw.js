@@ -1,4 +1,4 @@
-const VERSION = 'crack-v3';
+const VERSION = 'crack-v4';
 const APP_CACHE = `${VERSION}-app`;
 const IMAGE_CACHE = `${VERSION}-images`;
 const CORE = ['/', '/manifest.webmanifest', '/icons/icon.svg'];
@@ -26,7 +26,7 @@ self.addEventListener('fetch', event => {
         if (cached) return cached;
         try {
           const response = await fetch(event.request);
-          cache.put(event.request, response.clone()).catch(() => {});
+          if (response.ok) cache.put(event.request, response.clone()).catch(() => {});
           return response;
         } catch {
           return cached || Response.error();
