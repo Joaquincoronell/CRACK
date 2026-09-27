@@ -10,6 +10,7 @@ export default {
   "Carlos Valderrama": ["https://thumb.wikimedia.org/wikipedia/commons/thumb/3/31/Carlos_Valderrama.jpg/330px-Carlos_Valderrama.jpg", "https://commons.wikimedia.org/wiki/File:Carlos_Valderrama.jpg"],
   "Clarence Seedorf": ["https://thumb.wikimedia.org/wikipedia/commons/thumb/0/00/Clarence_Seedorf_1_%284867567772%29.jpg/330px-Clarence_Seedorf_1_%284867567772%29.jpg", "https://commons.wikimedia.org/wiki/File:Clarence_Seedorf_1_%284867567772%29.jpg"],
   "Ricardo Bochini": ["https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4e/Ricardo_Bochini.jpg/330px-Ricardo_Bochini.jpg", "https://commons.wikimedia.org/wiki/File:Ricardo_Bochini.jpg"],
+  "Luquitas Rodríguez": ["/players/luquitas-rodriguez.jpg", ""],
   "Esteban Cambiasso": ["https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ab/Argentine_-_Portugal_-_Esteban_Cambiasso.jpg/330px-Argentine_-_Portugal_-_Esteban_Cambiasso.jpg", "https://commons.wikimedia.org/wiki/File:Argentine_-_Portugal_-_Esteban_Cambiasso.jpg"],
   "Fernando Redondo": ["https://thumb.wikimedia.org/wikipedia/commons/thumb/7/76/Retrat_de_Fernando_Redondo.jpg/330px-Retrat_de_Fernando_Redondo.jpg", "https://commons.wikimedia.org/wiki/File:Retrat_de_Fernando_Redondo.jpg"],
   "Michael Laudrup": ["https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2f/Michael_Laudrup.jpg/330px-Michael_Laudrup.jpg", "https://commons.wikimedia.org/wiki/File:Michael_Laudrup.jpg"],
@@ -32,7 +33,7 @@ export default {
   "Ezequiel Lavezzi": ["https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f1/Ezequiel_Lavezzi.jpg/330px-Ezequiel_Lavezzi.jpg", "https://commons.wikimedia.org/wiki/File:Ezequiel_Lavezzi.jpg"],
   "Lucas Pratto": ["https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5f/Lucas_Pratto_01.jpg/330px-Lucas_Pratto_01.jpg", "https://commons.wikimedia.org/wiki/File:Lucas_Pratto_01.jpg"],
   "Lucas Janson": ["https://a.espncdn.com/photo/2023/0721/r1200360_1296x729_16-9.jpg", "https://www.espn.com.ar/futbol/argentina/nota/_/id/12337285/lucas-janson-revision-medica-para-firmar-con-boca-juniors"],
-  "Momo": ["", ""],
-  "Alejandro Domínguez": ["", ""],
-  "Tung Tung Sahur": ["", ""]
+  "Momo": ["/players/momo.jpg", ""],
+  "Alejandro Domínguez": ["/players/alejandro-dominguez.jpg", ""],
+  "Tung Tung Sahur": ["/players/tung-tung-sahur.jpg", ""]
 };
