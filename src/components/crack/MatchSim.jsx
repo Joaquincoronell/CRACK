@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Clock, Swords, Shield, Target, Zap, Gauge, Activity } from 'lucide-react';
+import { playerSkill } from '@/components/crack/catalog';
 
 const PHRASES = ['¡GOLAZO!', '¡De penal!', '¡Golpe de efecto!', '¡Qué definición!', '¡De cabeza al ángulo!', '¡Contragolpe letal!', '¡Zurdazo imposible!', '¡La picó por encima del arquero!', '¡Palomita!', '¡La rompió al palo izquierdo!'];
 const LANES = ['IZQUIERDA', 'CENTRO', 'DERECHA'];
@@ -52,21 +53,39 @@ const makeDistinctZones = n => {
 const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
 const average = values => values.length ? values.reduce((a, b) => a + b, 0) / values.length : 0;
 
+const skillAverage = (players, positions, keys, fallback) => {
+  const pool = players.filter(p => positions.includes(p.position));
+  if (!pool.length) return fallback;
+  return average(pool.map(p => average(keys.map(key => playerSkill(p, key)))));
+};
+
 const teamMetrics = team => {
   const players = team.players?.length ? team.players : team.scorers || [];
   const base = team.strength || 80;
-  const ratings = pos => players.filter(p => p.position === pos).map(p => p.rating || base);
-  const forwards = ratings('DEL');
-  const mids = ratings('MED');
-  const defs = ratings('DEF');
-  const keepers = ratings('ARQ');
   return {
     overall: base,
-    attack: forwards.length ? average(forwards) : base,
-    midfield: mids.length ? average(mids) : base,
-    defense: defs.length ? average(defs) : base,
-    keeper: keepers.length ? Math.max(...keepers) : base - 2
+    attack: skillAverage(players, ['DEL'], ['finishing', 'technique', 'pace'], base),
+    midfield: skillAverage(players, ['MED'], ['passing', 'technique', 'physical'], base),
+    defense: skillAverage(players, ['DEF'], ['defense', 'physical', 'pace'], base),
+    keeper: skillAverage(players, ['ARQ'], ['goalkeeping'], base),
+    pace: average(players.map(p => playerSkill(p, 'pace'))) || base,
+    passing: average(players.map(p => playerSkill(p, 'passing'))) || base,
+    setPieces: average(players.map(p => playerSkill(p, 'setPieces'))) || base
   };
+};
+
+const relevantPlayerSkill = (player, game) => {
+  if (!player) return 80;
+  const keys = {
+    penal: ['finishing', 'technique'],
+    freekick: ['setPieces', 'technique'],
+    oneonone: ['finishing', 'pace'],
+    cross: ['passing', 'technique'],
+    counter: ['pace', 'passing'],
+    longshot: ['finishing', 'technique'],
+    save: ['goalkeeping']
+  }[game] || ['technique'];
+  return average(keys.map(key => playerSkill(player, key)));
 };
 
 const pickPlayer = (team, preferred = []) => {
@@ -278,6 +297,7 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
   const [shootout, setShootout] = useState(null);
   const [shootDir, setShootDir] = useState(null);
   const [shootFlash, setShootFlash] = useState(null);
+  const [tactic, setTactic] = useState(null);
   const done = useRef([]);
   const reactionTimeout = useRef(null);
 
@@ -320,7 +340,8 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
     }).sort((x, y) => x.minute - y.minute);
   }, [a, b, round, userSide]);
 
-  const paused = !!moment || !!flash || !!shootout?.active;
+  const halftimePrompt = minute >= 45 && minute < 90 && tactic === null && !moment && !flash && !shootout?.active;
+  const paused = !!moment || !!flash || !!shootout?.active || halftimePrompt;
   const finished = minute >= 90 && !moment && !flash;
   const teamName = side => side === 0 ? a.name : b.name;
 
@@ -338,11 +359,18 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
   const fatigue = clamp((minute / 90) * (.14 + (environment.tempo.pace - 1) * .2), 0, .22);
   const scorePressure = minute > 68 ? clamp((rivalGoals - myGoals) * .07 + (minute - 68) * .003, 0, .24) : 0;
   const matchPressure = clamp(environment.crowd + environment.tempo.pressure + scorePressure - momentum * .025, .02, .42);
-  const dynamicDifficulty = clamp(baseDifficulty + fatigue + matchPressure * .6 - momentum * .035, .78, 1.9);
+  const tacticModifier = tactic === 'attack'
+    ? (moment?.attack ? -.1 : .1)
+    : tactic === 'close'
+      ? (moment?.attack ? .08 : -.12)
+      : tactic === 'balanced' ? -.02 : 0;
+  const dynamicDifficulty = clamp(baseDifficulty + fatigue + matchPressure * .6 - momentum * .035 + tacticModifier, .72, 1.9);
 
-  const currentPlayerRating = moment?.player?.rating || userTeam.strength || 80;
-  const roleBonus = moment ? (ROLE_BONUS[moment.game]?.[moment.player?.position] || 0) : 0;
-  const composure = clamp(currentPlayerRating + roleBonus + momentum * 2.5 - matchPressure * 22 - fatigue * 18, 55, 103);
+  const relevantSkill = moment
+    ? (moment.attack ? relevantPlayerSkill(moment.player, moment.game) : playerSkill(moment.keeper, 'goalkeeping'))
+    : userTeam.strength || 80;
+  const roleBonus = moment ? (ROLE_BONUS[moment.game]?.[moment.attack ? moment.player?.position : 'ARQ'] || 0) : 0;
+  const composure = clamp(relevantSkill + roleBonus + momentum * 2.5 - matchPressure * 22 - fatigue * 18, 55, 103);
 
   const timingProfile = (m, currentStep) => {
     const profiles = {
@@ -536,6 +564,12 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
     const lateSaveChance = clamp(.9 + (keeperRating - 85) * .008 - dynamicDifficulty * .055 - fatigue * .13, .66, .98);
     const save = correct && Math.random() < lateSaveChance;
     finishMoment(save, save ? '¡ATAJADÓN!' : correct ? '¡LE PASÓ POR ABAJO!' : '¡GOL RIVAL!', save ? moment.keeper.name + ' reaccionó a puro reflejo.' : correct ? 'Llegaste al palo, pero no alcanzó.' : 'Fuiste al lugar equivocado.', { lane: moment.targetLane });
+  };
+
+  const chooseTactic = value => {
+    if (tactic !== null) return;
+    setTactic(value);
+    setMomentum(m => clamp(m + (value === 'attack' ? 1 : value === 'close' ? 0 : .5), -3, 3));
   };
 
   const startShootout = () => {
@@ -768,6 +802,7 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
       <span><Activity size={12} /> CÉSPED {environment.surface.name}</span>
       <span><Target size={12} /> DIF. {Math.round(dynamicDifficulty * 100)}</span>
       <span><Zap size={12} /> {plan.length} MOMENTOS</span>
+      {tactic && <span className={'tactic-chip ' + tactic}><Swords size={12} /> {tactic === 'attack' ? 'IR A BUSCARLO' : tactic === 'close' ? 'CERRARSE' : 'EQUILIBRADO'}</span>}
     </div>
 
     <div className="team-variable-strip">
@@ -776,6 +811,17 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
       <span><b>{myMetrics.defense.toFixed(0)}</b> DEFENSA</span>
       <span><b>{myMetrics.keeper.toFixed(0)}</b> ARQ</span>
     </div>
+
+    {halftimePrompt && <div className="halftime-tactics">
+      <span className="tactics-kicker">45′ · ENTRETIEMPO</span>
+      <h3>¿Cómo salís al segundo tiempo?</h3>
+      <p>Elegís una sola vez. La táctica modifica las situaciones que vienen después.</p>
+      <div className="tactic-options">
+        <button onClick={() => chooseTactic('attack')}><b>IR A BUSCARLO</b><small>Más peligro cuando atacás, pero quedás más expuesto.</small></button>
+        <button onClick={() => chooseTactic('balanced')}><b>EQUILIBRADO</b><small>Pequeña mejora general, sin asumir demasiado riesgo.</small></button>
+        <button onClick={() => chooseTactic('close')}><b>CERRARSE</b><small>Más fuerte defendiendo, más difícil cuando te toca atacar.</small></button>
+      </div>
+    </div>}
 
     {renderMoment()}
 
