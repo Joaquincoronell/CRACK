@@ -1,5 +1,38 @@
 export const POSITIONS = { ARQ: { name: 'Arquero', plural: 'Arqueros', quota: 1 }, DEF: { name: 'Defensor', plural: 'Defensores', quota: 4 }, MED: { name: 'Mediocampista', plural: 'Mediocampistas', quota: 3 }, DEL: { name: 'Delantero', plural: 'Delanteros', quota: 3 } };
 
+export const ATTR_LABELS = {
+  pace: 'VEL',
+  technique: 'TEC',
+  passing: 'PAS',
+  finishing: 'DEF',
+  defense: 'MAR',
+  physical: 'FIS',
+  setPieces: 'BAL',
+  goalkeeping: 'ARQ'
+};
+
+const NO_DERIVED_ATTRS = new Set(['Cristina Kirchner', 'Javier Milei']);
+const clampAttr = n => Math.max(20, Math.min(99, Math.round(n)));
+const nameSeed = name => [...name].reduce((sum, ch, i) => sum + ch.charCodeAt(0) * (i + 3), 0);
+const jitter = (seed, salt) => ((seed * (salt * 17 + 23) + salt * 97) % 13) - 6;
+
+export function deriveAttributes(name, rating, position) {
+  if (NO_DERIVED_ATTRS.has(name)) return null;
+  const seed = nameSeed(name);
+  const j = salt => jitter(seed, salt);
+  const templates = {
+    ARQ: { pace: -16, technique: -6, passing: -5, finishing: -30, defense: 2, physical: 1, setPieces: -12, goalkeeping: 6 },
+    DEF: { pace: -2, technique: -4, passing: -4, finishing: -14, defense: 6, physical: 4, setPieces: -8, goalkeeping: -34 },
+    MED: { pace: 0, technique: 5, passing: 6, finishing: -2, defense: -4, physical: -2, setPieces: 2, goalkeeping: -35 },
+    DEL: { pace: 4, technique: 3, passing: -3, finishing: 6, defense: -18, physical: 1, setPieces: 0, goalkeeping: -36 }
+  };
+  const t = templates[position] || templates.MED;
+  const keys = Object.keys(t);
+  return Object.fromEntries(keys.map((key, i) => [key, clampAttr(rating + t[key] + j(i + 1))]));
+}
+
+export const playerSkill = (player, key) => player?.attributes?.[key] ?? player?.rating ?? 75;
+
 const groups = [
 ['ARQ', [['Gianluigi Buffon',95],['Iker Casillas',94],['Manuel Neuer',95],['Emiliano Martínez',88],['René Higuita',82],['Loris Karius',70],['Franco Armani',84],['Sergio Romero',83],['Agustín Rossi',82],['José Luis Chilavert',90],['San Alonso',100],['Dida',89],['Edwin van der Sar',92],['Oliver Kahn',93],['Roberto Abbondanzieri',86],['Ubaldo Fillol',93]]],
 ['DEF', [['Paolo Maldini',97],['Cafú',94],['Roberto Carlos',94],['Sergio Ramos',92],['Carles Puyol',91],['Alessandro Nesta',93],['Fabio Cannavaro',93],['Virgil van Dijk',91],['Marcelo',90],['Javier Zanetti',92],['Philipp Lahm',93],['Gerard Piqué',87],['Pepe',87],['Walter Samuel',87],['Nicolás Otamendi',84],['Cristian Romero',86],['Marcos Rojo',77],['Harry Maguire',78],['David Luiz',80],['Phil Jones',73],['Yerry Mina',76],['Gary Medel',79],['Frank Fabra',74],['Federico Fazio',76],['Gonzalo Montiel',82],['Milton Casco',80],['Nicolás Tagliafico',84],['Lisandro Martínez',86],['Luis Advíncula',80],['Carlos Izquierdoz',81],['Claudio “Chiqui” Tapia',43],['Cristina Kirchner',35],['Dani Alves',92],['Momo',52],['Gabriel Heinze',85],['Roberto Ayala',89],['Daniel Passarella',93],['Óscar Ruggeri',88],['Ashley Cole',90],['Juan Pablo Sorín',87],['Rafael Márquez',89],['Alejandro Domínguez',34],['Gabriel Mercado',81],['Ricardo Fort',36],['Diego Placente',82],['Fabricio Coloccini',84],['Lionel Scaloni',79],['Marcos Acuña',84],['Javier Milei',48]]],
@@ -17,7 +50,7 @@ export const CATALOG = groups
   .flatMap(([position, list]) => list.map(([name, rating, extra]) => ({ name, rating, position, ...extra })))
   .map((p, i) => {
     while (RETIRED_IDS.has(nextId)) nextId += 1;
-    const player = { ...p, id: nextId, phrase: phrases[i % phrases.length] };
+    const player = { ...p, id: nextId, phrase: phrases[i % phrases.length], attributes: deriveAttributes(p.name, p.rating, p.position) };
     nextId += 1;
     return player;
   });
