@@ -4,7 +4,7 @@ export const ATTR_LABELS = {
   pace: 'VEL',
   technique: 'TEC',
   passing: 'PAS',
-  finishing: 'DEF',
+  finishing: 'FIN',
   defense: 'MAR',
   physical: 'FIS',
   setPieces: 'BAL',
