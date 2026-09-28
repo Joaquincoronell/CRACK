@@ -1,4 +1,4 @@
-const VERSION = 'crack-v16';
+const VERSION = 'crack-v17';
 const APP_CACHE = `${VERSION}-app`;
 const IMAGE_CACHE = `${VERSION}-images`;
 const CORE = ['/', '/manifest.webmanifest', '/icons/icon.svg'];
