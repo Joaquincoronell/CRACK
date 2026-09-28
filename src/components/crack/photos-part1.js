@@ -7,7 +7,7 @@ export default {
   "Loris Karius": ["https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1c/Loris_Karius_2015.jpg/330px-Loris_Karius_2015.jpg", "https://commons.wikimedia.org/wiki/File:Loris_Karius_2015.jpg"],
   "Franco Armani": ["https://thumb.wikimedia.org/wikipedia/commons/thumb/d/de/Franco_Armani_2018.jpg/330px-Franco_Armani_2018.jpg", "https://commons.wikimedia.org/wiki/File:Franco_Armani_2018.jpg"],
   "Sergio Romero": ["https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6f/SergioRomero.jpg/330px-SergioRomero.jpg", "https://commons.wikimedia.org/wiki/File:SergioRomero.jpg"],
-  "Agustín Rossi": ["/players/agustin-rossi.svg", ""],
+  "Agustín Rossi": ["/players/agustin-rossi-final.jpg", ""],
   "José Luis Chilavert": ["https://upload.wikimedia.org/wikipedia/commons/f/f7/Chilavert_sanlorenzo.jpg", "https://commons.wikimedia.org/wiki/File:Chilavert_sanlorenzo.jpg"],
   "San Alonso": ["/players/san-alonso.jpg", ""],
   "Paolo Maldini": ["https://thumb.wikimedia.org/wikipedia/commons/thumb/3/38/Paolo_Maldini_2009.jpg/330px-Paolo_Maldini_2009.jpg", "https://commons.wikimedia.org/wiki/File:Paolo_Maldini_2009.jpg"],

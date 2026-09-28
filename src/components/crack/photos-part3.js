@@ -21,7 +21,7 @@ export default {
   "La cobra": ["/players/la-cobra.jpg", ""],
   "Gabriel Batistuta": ["https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e4/Gabriel_batistuta.jpg/330px-Gabriel_batistuta.jpg", "https://commons.wikimedia.org/wiki/File:Gabriel_batistuta.jpg"],
   "Ibai Llanos": ["https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ef/Ibai_Llanos_in_2020.jpg/330px-Ibai_Llanos_in_2020.jpg", "https://commons.wikimedia.org/wiki/File:Ibai_Llanos_in_2020.jpg"],
-  "Davo": ["/players/davo-v4.svg", ""],
+  "Davo": ["/players/davo-final.jpg", ""],
   "Spreen": ["https://commons.wikimedia.org/wiki/Special:FilePath/Spreen_2024.jpg?width=720", "https://commons.wikimedia.org/wiki/File:Spreen_2024.jpg"],
   "Dida": ["https://thumb.wikimedia.org/wikipedia/commons/thumb/2/25/Dida-wikipedia.png/330px-Dida-wikipedia.png", "https://commons.wikimedia.org/wiki/File:Dida-wikipedia.png"],
   "Edwin van der Sar": ["https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2c/Edwin_van_der_Sar_2011.jpg/330px-Edwin_van_der_Sar_2011.jpg", "https://commons.wikimedia.org/wiki/File:Edwin_van_der_Sar_2011.jpg"],
