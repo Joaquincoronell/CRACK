@@ -201,3 +201,49 @@
   .six-zone-cell span{font-size:6px}
   .six-zone-keeper{bottom:39px;transform:translateX(-50%) scale(.9)}
 }
+
+
+/* Match simulation v4 — easier visual free kicks and crosses */
+.fk-choice-stage{position:relative;max-width:520px;margin:14px auto 8px;padding:24px 18px 0;border:1px solid #3b4934;border-radius:9px;background:radial-gradient(circle at 50% 10%,#2a3625,#161d14 62%,#0e120d);overflow:hidden;box-shadow:inset 0 0 36px #0008}
+.fk-goal{position:relative;width:92%;height:160px;margin:0 auto;border:4px solid #edf1e9;border-bottom-width:6px;box-shadow:0 7px 20px #0008;overflow:hidden}
+.fk-goal .goal-net{position:absolute;inset:0}
+.fk-lane{position:absolute;top:0;bottom:0;width:33.333%;border:0;border-right:1px dashed #ffffff28;background:transparent;cursor:pointer;z-index:6;transition:background .14s ease,box-shadow .14s ease}
+.fk-lane.lane-0{left:0}.fk-lane.lane-1{left:33.333%}.fk-lane.lane-2{left:66.666%;border-right:0}
+.fk-lane.open:hover{background:#c1fa4112;box-shadow:inset 0 0 28px #c1fa4120}
+.fk-lane.blocked{background:#9a493516}
+.fk-lane small{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);font-size:6px;letter-spacing:.75px;color:#aab6a2;white-space:nowrap}
+.fk-lane.open small{color:#c1fa41}
+.fk-target{position:absolute;left:50%;top:32%;transform:translate(-50%,-50%);font-size:31px;color:#c1fa41;text-shadow:0 0 12px #c1fa4170}
+.fk-wall{position:absolute;left:50%;bottom:0;transform:translateX(-50%);display:flex;gap:2px}
+.fk-wall i{display:block;width:14px;height:55px;border-radius:7px 7px 3px 3px;background:linear-gradient(#8a98a8 0 55%,#dde2e6 55%);box-shadow:inset 0 -8px 0 #596675}
+.fk-wall i:before{content:'';display:block;width:9px;height:9px;margin:-8px auto 0;border-radius:50%;background:#caa68a}
+.fk-keeper{position:absolute;left:50%;bottom:6px;width:34px;height:71px;transform:translateX(-50%);z-index:4;opacity:.78}
+.fk-keeper .keeper-body,.fk-keeper .keeper-arm,.fk-keeper .keeper-leg{background:#dec184}
+.fk-ball-row{height:55px;position:relative;margin:0 -18px;background:linear-gradient(#203219,#29421f);border-top:1px solid #48663d}
+.fk-ball{position:absolute;left:50%;top:17px;transform:translateX(-50%);font-size:18px}
+.fk-boot{position:absolute;left:calc(50% - 48px);bottom:5px;width:40px;height:16px;background:#f0f1ec;clip-path:polygon(0 32%,58% 32%,77% 0,100% 20%,91% 63%,63% 100%,8% 90%);transform:rotate(-11deg);filter:drop-shadow(0 3px 2px #0008)}
+
+.cross-choice-stage{position:relative;height:245px;max-width:520px;margin:14px auto 8px;border:2px solid #849a7a;border-radius:8px;background:repeating-linear-gradient(90deg,#223a20 0 16.66%,#294524 16.66% 33.33%);overflow:hidden;box-shadow:inset 0 0 35px #0007}
+.cross-box-line{position:absolute;left:10%;right:10%;top:13%;height:72%;border:1px solid #ffffff40;border-top:0}
+.cross-goal-mini{position:absolute;left:37%;right:37%;top:0;height:18px;border:2px solid #fff;border-top:0;opacity:.75}
+.cross-zone{position:absolute;top:0;bottom:0;width:33.333%;border:0;border-right:1px dashed #ffffff28;background:transparent;color:#d5dfcf;cursor:pointer}
+.cross-zone.lane-0{left:0}.cross-zone.lane-1{left:33.333%}.cross-zone.lane-2{left:66.666%;border-right:0}
+.cross-zone.open:hover{background:#c1fa4110}
+.cross-zone.blocked{background:#a44b3512}
+.cross-zone>span{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);font-family:'Arial Black',Impact,system-ui,sans-serif;font-size:7px;white-space:nowrap}
+.cross-zone>small{position:absolute;left:50%;bottom:26px;transform:translateX(-50%);font-size:5px;letter-spacing:.6px;white-space:nowrap;color:#93a08b}
+.cross-zone.open>small{color:#c1fa41}
+.cross-runner{position:absolute;left:50%;top:47%;transform:translate(-50%,-50%);width:34px;height:34px;border-radius:50%;background:#c1fa41;border:3px solid #eaffc1;box-shadow:0 0 0 5px #c1fa4122,0 3px 8px #0008}
+.cross-runner i{position:absolute;left:50%;top:-11px;transform:translateX(-50%);width:12px;height:12px;border-radius:50%;background:#e4b997}
+.cross-runner b{display:flex;height:100%;align-items:center;justify-content:center;color:#17200f;font-family:'Arial Black',Impact,system-ui,sans-serif;font-size:11px}
+.cross-crowd{position:absolute;left:50%;top:49%;transform:translate(-50%,-50%);width:82px;height:70px}
+.cross-crowd i{position:absolute;width:25px;height:25px;border-radius:50%;background:#b86d5d;border:3px solid #ffd2c7;box-shadow:0 3px 7px #0008}
+.cross-crowd i:nth-child(1){left:5px;top:26px}.cross-crowd i:nth-child(2){left:29px;top:6px}.cross-crowd i:nth-child(3){right:4px;top:29px}
+.cross-ball-origin{position:absolute;left:6%;bottom:11%;font-size:17px;filter:drop-shadow(0 2px 3px #0008)}
+
+@media(max-width:720px){
+  .fk-goal{height:135px}
+  .fk-target{font-size:27px}
+  .cross-choice-stage{height:215px}
+  .cross-zone>span{font-size:6px}
+}
