@@ -1,5 +1,7 @@
 import { CATALOG, POSITIONS, byId, playerSkill } from '@/components/crack/catalog';
 export const STORE_KEY = 'crack.match.v1';
+export const INITIAL_SKIPS = 3;
+export const skipsLeft = team => team?.skips ?? INITIAL_SKIPS;
 export const BOT_PERSONALITIES = [
   { id: 'tiburon', name: 'EL TIBURÓN', text: 'Agresivo. Paga de más por estrellas.', aggression: 1.22, starBias: 1.24, bargain: .94, patience: .9 },
   { id: 'scout', name: 'EL SCOUT', text: 'Busca valor y posiciones que necesita.', aggression: 1, starBias: 1.03, bargain: 1.16, patience: 1.06 },
@@ -31,7 +33,7 @@ export function nextAuction(state) {
   const start = state.round % state.teams.length;
   const turn = active.find(i => i >= start) ?? active[0];
   const player = byId(id);
-  return { ...state, deck, round: state.round + 1, phase: 'auction', notice: state.notice || '', auction: { id, active, turn, price: 0, leader: null, event: makeAuctionEvent(state, player) } };
+  return { ...state, deck, round: state.round + 1, phase: 'auction', notice: state.notice || '', auction: { id, active, turn, openingTurn: turn, price: 0, leader: null, event: makeAuctionEvent(state, player) } };
 }
 export const MODES = ['ciegas', 'revelado', 'intercalado'];
 export const cardVisible = state => state.mode === 'revelado' || (state.mode === 'intercalado' && state.round % 2 === 1);
@@ -47,6 +49,7 @@ export function newGame(players, mode) {
       team: p.team.trim() || 'Equipo ' + (i + 1),
       bot: !!p.bot,
       botPersonality: p.bot ? BOT_PERSONALITIES[i % BOT_PERSONALITIES.length].id : null,
+      skips: INITIAL_SKIPS,
       budget: 100,
       squad: []
     })),
@@ -61,7 +64,7 @@ function settle(state) {
     const teams = state.teams.map((t, i) => i === a.leader ? { ...t, budget: t.budget - a.price, squad: [...t.squad, { id: a.id, price: a.price }] } : t);
     return { ...state, teams, phase: 'reveal', notice: '' };
   }
-  if (!a.active.length) return nextAuction({ ...state, deck: [...state.deck, a.id], notice: cardVisible(state) ? 'Nadie ofertó. El futbolista vuelve al mazo.' : 'Nadie ofertó. El futbolista vuelve al mazo, sin revelar su identidad.' });
+  if (!a.active.length) return nextAuction({ ...state, notice: 'El jugador quedó fuera del mercado. No vuelve al mazo.' });
   const candidates = a.active.filter(i => i !== a.leader);
   const turn = candidates.find(i => i > a.turn) ?? candidates[0];
   return { ...state, auction: { ...a, turn } };
@@ -85,7 +88,34 @@ export function gameReducer(state, action) {
     if (![1, 2, 5].includes(action.amount) || a.price + action.amount > maxBid(team) || !eligible(team, byId(a.id).position) || !a.active.includes(a.turn) || a.turn === a.leader) return state;
     return settle({ ...state, notice: '', auction: { ...a, price: a.price + action.amount, leader: a.turn } });
   }
-  if (action.type === 'pass') return settle({ ...state, notice: '', auction: { ...a, active: a.active.filter(i => i !== a.turn) } });
+  if (action.type === 'pass') {
+    const openingTurn = a.openingTurn ?? a.turn;
+    const isOpeningDecision = a.leader === null && a.price === 0 && a.turn === openingTurn;
+
+    if (isOpeningDecision) {
+      const remaining = skipsLeft(team);
+      if (remaining > 0) {
+        const teams = state.teams.map((t, i) => i === a.turn ? { ...t, skips: remaining - 1 } : t);
+        return nextAuction({
+          ...state,
+          teams,
+          notice: team.name + ' usó un skip. El jugador sale del mercado y no vuelve al mazo.'
+        });
+      }
+
+      const forcedAmount = 1;
+      if (forcedAmount <= maxBid(team) && eligible(team, byId(a.id).position)) {
+        return settle({
+          ...state,
+          notice: team.name + ' no tiene skips: abre la subasta por $1M.',
+          auction: { ...a, price: forcedAmount, leader: a.turn }
+        });
+      }
+      return state;
+    }
+
+    return settle({ ...state, notice: '', auction: { ...a, active: a.active.filter(i => i !== a.turn) } });
+  }
   return state;
 }
 export const LEGENDS = [
