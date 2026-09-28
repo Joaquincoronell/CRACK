@@ -113,6 +113,48 @@ function GoalStage({ mode, keeperLane = 1, targetLane = 1, selectedLane = null, 
   </div>;
 }
 
+function FreeKickChoiceStage({ blockedLane, onPick }) {
+  return <div className="fk-choice-stage">
+    <div className="fk-goal">
+      <div className="goal-net" />
+      <div className="fk-keeper">
+        <i className="keeper-head" /><i className="keeper-body" /><i className="keeper-arm left" /><i className="keeper-arm right" /><i className="keeper-leg left" /><i className="keeper-leg right" />
+      </div>
+      {[0, 1, 2].map(i => <button
+        key={i}
+        type="button"
+        className={'fk-lane lane-' + i + (i === blockedLane ? ' blocked' : ' open')}
+        onClick={() => onPick(i)}
+      >
+        {i === blockedLane
+          ? <><span className="fk-wall"><i /><i /><i /></span><small>CERRADO</small></>
+          : <><span className="fk-target">◎</span><small>HUECO</small></>}
+      </button>)}
+    </div>
+    <div className="fk-ball-row"><span className="fk-ball">⚽</span><span className="fk-boot" /></div>
+  </div>;
+}
+
+function CrossChoiceStage({ blockedLane, onPick }) {
+  return <div className="cross-choice-stage">
+    <div className="cross-box-line" />
+    <div className="cross-goal-mini" />
+    {[0, 1, 2].map(i => <button
+      key={i}
+      type="button"
+      className={'cross-zone lane-' + i + (i === blockedLane ? ' blocked' : ' open')}
+      onClick={() => onPick(i)}
+    >
+      <span>{CROSS_LANES[i]}</span>
+      {i === blockedLane
+        ? <div className="cross-crowd"><i /><i /><i /></div>
+        : <div className="cross-runner"><i /><b>9</b></div>}
+      <small>{i === blockedLane ? '3 DEFENSORES' : 'ATACANTE SOLO'}</small>
+    </button>)}
+    <div className="cross-ball-origin">⚽</div>
+  </div>;
+}
+
 function PitchStage({ pressureLane, selectedLane = null, onPick }) {
   return <div className="mini-pitch">
     <div className="pitch-center-line" />
@@ -249,8 +291,6 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
   const timingProfile = (m, currentStep) => {
     const profiles = {
       penal: [{ label: 'PRECISIÓN', width: 25, speed: 2.2 }],
-      freekick: [{ label: 'POTENCIA', width: 29, speed: 2.05 }, { label: 'ROSCA', width: 17, speed: 2.9 }],
-      cross: [{ label: 'CALIDAD DEL CENTRO', width: 25, speed: 2.35 }, { label: 'TIMING DEL CABEZAZO', width: 15, speed: 3.15 }],
       longshot: [{ label: 'POTENCIA', width: 23, speed: 2.55 }, { label: 'COLOCACIÓN', width: 14, speed: 3.35 }]
     };
     const p = (profiles[m.game] || profiles.penal)[currentStep] || profiles.penal[0];
@@ -310,7 +350,7 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
     }
   }, [minute, paused, plan]);
 
-  const currentTiming = moment && ['penal', 'freekick', 'cross', 'longshot'].includes(moment.game) && !(moment.game === 'penal' && !moment.attack)
+  const currentTiming = moment && ['penal', 'longshot'].includes(moment.game) && !(moment.game === 'penal' && !moment.attack)
     ? timingProfile(moment, step)
     : null;
 
@@ -350,7 +390,7 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
     const hit = distance <= currentTiming.width / 2;
     const perfect = distance <= currentTiming.width * .16;
     const nextHits = [...timingHits, { hit, perfect }];
-    const totalSteps = ['freekick', 'cross', 'longshot'].includes(moment.game) ? 2 : 1;
+    const totalSteps = moment.game === 'longshot' ? 2 : 1;
     if (step + 1 < totalSteps) {
       setTimingHits(nextHits);
       setStep(s => s + 1);
@@ -369,18 +409,6 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
       finishMoment(success, success ? '¡GOL DE PENAL!' : clean ? '¡ATAJÓ!' : '¡AFUERA!', success ? 'Dirección y temple perfectos.' : clean ? 'El arquero leyó el remate.' : 'La presión movió el pie.', { lane: selectedLane });
     }
 
-    if (moment.game === 'freekick') {
-      // Si el jugador supera las dos fases del minijuego, el gol es suyo.
-      // La dificultad ya está expresada en el tamaño de las zonas y la velocidad de la aguja.
-      const success = clean;
-      finishMoment(
-        success,
-        success ? '¡GOLAZO DE TIRO LIBRE!' : '¡A LA BARRERA!',
-        success ? 'Potencia y rosca perfectas. Sin azar después del acierto.' : 'Falló una de las dos ejecuciones.',
-        { lane: selectedLane }
-      );
-    }
-
     if (moment.game === 'longshot') {
       const longEdge = (myMetrics.midfield - rivalMetrics.defense) / 180;
       const goalChance = clamp(.72 + longEdge - keeperEdge - matchPressure * .08 + perfectCount * .1, .35, .93);
@@ -388,17 +416,26 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
       finishMoment(success, success ? '¡MISIL DE AFUERA!' : clean ? '¡MANOTAZO!' : '¡SE FUE!', success ? 'Le pegaste con todo y al lugar justo.' : clean ? 'El arquero reaccionó a tiempo.' : 'No salió centrado el remate.', { lane: selectedLane });
     }
 
-    if (moment.game === 'cross') {
-      // Centro correcto + timing correcto del cabezazo = gol garantizado.
-      // Defensa, presión y fatiga hacen más difícil acertar; no te quitan el gol después.
-      const success = clean;
-      finishMoment(
-        success,
-        success ? '¡CABEZAZO Y GOL!' : '¡MAL CENTRO!',
-        success ? 'Centro medido y cabezazo de manual. Lo hiciste perfecto.' : 'Falló el centro o el timing del cabezazo.',
-        { lane: selectedLane }
-      );
-    }
+  };
+
+  const chooseFreeKick = lane => {
+    const success = lane !== moment.defensiveLane;
+    finishMoment(
+      success,
+      success ? '¡GOLAZO DE TIRO LIBRE!' : '¡A LA BARRERA!',
+      success ? 'Viste el hueco y la pusiste ahí.' : 'Elegiste justo el sector cerrado.',
+      { lane }
+    );
+  };
+
+  const chooseCross = lane => {
+    const success = lane !== moment.defensiveLane;
+    finishMoment(
+      success,
+      success ? '¡CABEZAZO Y GOL!' : '¡DESPEJÓ LA DEFENSA!',
+      success ? 'Encontraste al atacante solo y el centro cayó perfecto.' : 'Mandaste el centro a la zona más cargada.',
+      { lane }
+    );
   };
 
   const chooseOneOnOne = lane => {
@@ -503,8 +540,8 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
 
   const resolveRivalPenalty = () => {
     if (!shootout?.active || shootout.done || userShooting || shootFlash) return;
-    // El remate rival se resuelve al azar: 50% gol, 50% fallo.
-    const goal = Math.random() < .5;
+    // El remate rival se resuelve al azar: 70% gol, 30% fallo.
+    const goal = Math.random() < .7;
     const zone = rand(6);
     setShootFlash({
       text: goal ? '¡GOL RIVAL!' : '¡LO ERRÓ!',
@@ -557,15 +594,15 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
         <span><b>{momentum > 0 ? '+' + momentum : momentum}</b> MOMENTO</span>
       </div>
 
-      {['penal', 'freekick', 'cross', 'longshot'].includes(moment.game) && moment.attack && <>
-        <p>{needsLane ? (moment.game === 'cross' ? 'Elegí dónde mandar el centro.' : 'Elegí dónde querés colocar la pelota.') : moment.game === 'freekick' ? 'Ahora combiná potencia y rosca.' : moment.game === 'cross' ? 'Clavá el centro y después atacá el cabezazo.' : moment.game === 'longshot' ? 'Primero potencia, después colocación.' : 'Ahora clavá la precisión.'}</p>
+      {['penal', 'longshot'].includes(moment.game) && moment.attack && <>
+        <p>{needsLane ? 'Elegí dónde querés colocar la pelota.' : moment.game === 'longshot' ? 'Primero potencia, después colocación.' : 'Ahora clavá la precisión.'}</p>
         <GoalStage
           mode={moment.game}
           keeperLane={moment.keeperLane}
           selectedLane={selectedLane}
           onPick={needsLane ? setSelectedLane : null}
-          wall={moment.game === 'freekick' || moment.game === 'longshot'}
-          laneLabels={laneLabelsForMoment}
+          wall={moment.game === 'longshot'}
+          laneLabels={LANES}
         />
         {!needsLane && currentTiming && <>
           <div className="timing-label">{currentTiming.label} · PASO {step + 1}</div>
@@ -575,6 +612,16 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
           </div>
           <button className="moment-btn moment-stop" onClick={stopTiming}>¡AHORA!</button>
         </>}
+      </>}
+
+      {moment.game === 'freekick' && moment.attack && <>
+        <p>Ya no hay barra: mirá el arco. Hay <b>2 huecos de gol</b> y 1 sector cerrado por barrera/arquero.</p>
+        <FreeKickChoiceStage blockedLane={moment.defensiveLane} onPick={chooseFreeKick} />
+      </>}
+
+      {moment.game === 'cross' && moment.attack && <>
+        <p>Buscá al compañero libre. Hay <b>2 zonas buenas</b> y una cargada con tres defensores.</p>
+        <CrossChoiceStage blockedLane={moment.defensiveLane} onPick={chooseCross} />
       </>}
 
       {moment.game === 'oneonone' && <>
