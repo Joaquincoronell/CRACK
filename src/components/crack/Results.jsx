@@ -24,6 +24,10 @@ const tournamentStory = game => {
   const byTeamId = Object.fromEntries(t.teams.map(team => [team.id, team]));
   const rivalId = final ? (final.a === champion.id ? final.b : final.a) : null;
   const rival = rivalId ? byTeamId[rivalId] : null;
+  const championScore = final ? (final.a === champion.id ? final.goalsA : final.goalsB) : null;
+  const rivalScore = final ? (final.a === champion.id ? final.goalsB : final.goalsA) : null;
+  const championPens = final ? (final.a === champion.id ? final.pensA : final.pensB) : null;
+  const rivalPens = final ? (final.a === champion.id ? final.pensB : final.pensA) : null;
   const championPlayers = champion.players || [];
   const mvp = championPlayers.length ? [...championPlayers].sort((a, b) => b.rating - a.rating)[0] : null;
 
@@ -35,7 +39,7 @@ const tournamentStory = game => {
     ? [...purchases].sort((a, b) => (b.player.rating - b.price * 1.35) - (a.player.rating - a.price * 1.35))[0]
     : null;
 
-  return { champion, final, rival, mvp, bargain };
+  return { champion, final, rival, mvp, bargain, championScore, rivalScore, championPens, rivalPens };
 };
 
 export default function Results({ game, photos, onRematch, dispatch }) {
@@ -141,7 +145,7 @@ export default function Results({ game, photos, onRematch, dispatch }) {
         <p className="newspaper-deck">{story.rival ? 'Superó a ' + story.rival.name + ' y levantó la copa.' : 'Le ganó a la historia entera.'}</p>
         <div className="newspaper-score">
           <span>{story.champion.name}</span>
-          <strong>{story.final ? story.final.goalsA + '–' + story.final.goalsB : 'CAMPEÓN'}</strong>
+          <strong>{story.final ? story.championScore + '–' + story.rivalScore : 'CAMPEÓN'}</strong>
           <span>{story.rival?.name || 'LEYENDAS'}</span>
         </div>
         <div className="newspaper-columns">
