@@ -1,5 +1,23 @@
-import { CATALOG, POSITIONS, byId } from '@/components/crack/catalog';
+import { CATALOG, POSITIONS, byId, playerSkill } from '@/components/crack/catalog';
 export const STORE_KEY = 'crack.match.v1';
+export const BOT_PERSONALITIES = [
+  { id: 'tiburon', name: 'EL TIBURÓN', text: 'Agresivo. Paga de más por estrellas.', aggression: 1.22, starBias: 1.24, bargain: .94, patience: .9 },
+  { id: 'scout', name: 'EL SCOUT', text: 'Busca valor y posiciones que necesita.', aggression: 1, starBias: 1.03, bargain: 1.16, patience: 1.06 },
+  { id: 'ahorrista', name: 'EL AHORRISTA', text: 'Cuida la caja y espera oportunidades.', aggression: .84, starBias: .92, bargain: 1.25, patience: 1.18 },
+  { id: 'galactico', name: 'EL GALÁCTICO', text: 'Se obsesiona con los nombres pesados.', aggression: 1.12, starBias: 1.38, bargain: .88, patience: .94 }
+];
+export const getBotPersonality = id => BOT_PERSONALITIES.find(p => p.id === id) || BOT_PERSONALITIES[1];
+
+const auctionVisible = state => state.mode === 'revelado' || (state.mode === 'intercalado' && (state.round + 1) % 2 === 1);
+function makeAuctionEvent(state, player) {
+  if (Math.random() > .24) return null;
+  if (!auctionVisible(state) && Math.random() < .48) {
+    const tier = player.rating >= 93 ? 'SCOUT: perfil de élite, 93+' : player.rating >= 87 ? 'SCOUT: nivel alto, 87–92' : player.rating >= 80 ? 'SCOUT: nivel competitivo, 80–86' : 'SCOUT: apuesta de riesgo, menos de 80';
+    return { id: 'scout', label: 'INFORME DE SCOUT', text: tier, botFactor: 1 };
+  }
+  if (Math.random() < .5) return { id: 'hype', label: 'SUBASTA CALIENTE', text: 'Los bots llegan con ganas de gastar.', botFactor: 1.18 };
+  return { id: 'cold', label: 'MERCADO FRÍO', text: 'Los bots están más cautos de lo normal.', botFactor: .86 };
+}
 export function shuffle(values) { const a = [...values]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 export const countPosition = (team, pos) => team.squad.filter(p => byId(p.id).position === pos).length;
 export const maxBid = team => team.budget - (10 - team.squad.length);
@@ -12,12 +30,31 @@ export function nextAuction(state) {
   const active = state.teams.map((t, i) => eligible(t, byId(id).position) ? i : -1).filter(i => i >= 0);
   const start = state.round % state.teams.length;
   const turn = active.find(i => i >= start) ?? active[0];
-  return { ...state, deck, round: state.round + 1, phase: 'auction', notice: state.notice || '', auction: { id, active, turn, price: 0, leader: null } };
+  const player = byId(id);
+  return { ...state, deck, round: state.round + 1, phase: 'auction', notice: state.notice || '', auction: { id, active, turn, price: 0, leader: null, event: makeAuctionEvent(state, player) } };
 }
 export const MODES = ['ciegas', 'revelado', 'intercalado'];
 export const cardVisible = state => state.mode === 'revelado' || (state.mode === 'intercalado' && state.round % 2 === 1);
 export function newDeck() { return shuffle(CATALOG.map(p => p.id)); }
-export function newGame(players, mode) { return nextAuction({ version: 1, mode: MODES.includes(mode) ? mode : 'ciegas', teams: players.map((p, i) => ({ name: p.name.trim() || 'Participante ' + (i + 1), team: p.team.trim() || 'Equipo ' + (i + 1), bot: !!p.bot, budget: 100, squad: [] })), deck: newDeck(), round: 0, notice: '' }); }
+export function newGame(players, mode) {
+  const gameId = Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 7);
+  return nextAuction({
+    version: 1,
+    gameId,
+    mode: MODES.includes(mode) ? mode : 'ciegas',
+    teams: players.map((p, i) => ({
+      name: p.name.trim() || 'Participante ' + (i + 1),
+      team: p.team.trim() || 'Equipo ' + (i + 1),
+      bot: !!p.bot,
+      botPersonality: p.bot ? BOT_PERSONALITIES[i % BOT_PERSONALITIES.length].id : null,
+      budget: 100,
+      squad: []
+    })),
+    deck: newDeck(),
+    round: 0,
+    notice: ''
+  });
+}
 function settle(state) {
   const a = state.auction;
   if (a.leader !== null && a.active.length === 1) {
@@ -67,7 +104,7 @@ export function buildTournament(state) {
   standings(state.teams).forEach((s, i) => {
     const roster = state.teams[s.index].squad.map(p => {
       const player = byId(p.id);
-      return { name: player.name, rating: player.rating, position: player.position };
+      return { name: player.name, rating: player.rating, position: player.position, attributes: player.attributes };
     });
     slots[spots[i]] = {
       id: 'p' + s.index,
@@ -76,7 +113,8 @@ export function buildTournament(state) {
       strength: teamStrength(state.teams[s.index]),
       isPlayer: true,
       scorers: roster,
-      players: roster
+      players: roster,
+      identity: teamIdentity(state.teams[s.index])
     };
   });
   const legends = shuffle(LEGENDS);
@@ -85,9 +123,9 @@ export function buildTournament(state) {
     const players = l.stars.split(',').map((n, index) => {
       const name = n.trim();
       const position = /Casillas|Barthez|Pumpido/i.test(name) ? 'ARQ' : index < 2 ? 'DEL' : index < 4 ? 'MED' : 'DEF';
-      return { name, rating: l.strength, position };
+      return { name, rating: l.strength, position, attributes: null };
     });
-    slots[i] = { id: 'l' + l.name, name: l.name, stars: l.stars, strength: l.strength, isPlayer: false, scorers: players, players };
+    slots[i] = { id: 'l' + l.name, name: l.name, stars: l.stars, strength: l.strength, isPlayer: false, scorers: players, players, identity: { style: 'LEYENDA', chemistry: Math.min(99, Math.round(l.strength + 2)), tags: ['HISTORIA', 'JERARQUÍA'] } };
   }
   return { teams: slots, round: 0, results: [], champion: null };
 }
@@ -102,19 +140,66 @@ const pickScorer = t => {
   for (let i = 0; i < t.scorers.length; i++) { r -= weights[i]; if (r <= 0) return t.scorers[i].name; }
   return t.scorers[t.scorers.length - 1].name;
 };
+const avg = values => values.length ? values.reduce((sum, n) => sum + n, 0) / values.length : 0;
+const rosterSkill = (players, positions, keys, fallback) => {
+  const pool = players.filter(p => positions.includes(p.position));
+  if (!pool.length) return fallback;
+  return avg(pool.map(p => avg(keys.map(key => playerSkill(p, key)))));
+};
+
+export function teamIdentity(team) {
+  const players = team.squad?.map(s => byId(s.id)).filter(Boolean) || [];
+  if (!players.length) return { attack: 0, midfield: 0, defense: 0, keeper: 0, chemistry: 0, style: 'SIN DEFINIR', tags: [] };
+
+  const base = avg(players.map(p => p.rating));
+  const attack = rosterSkill(players, ['DEL'], ['finishing', 'technique', 'pace'], base);
+  const midfield = rosterSkill(players, ['MED'], ['passing', 'technique', 'physical'], base);
+  const defense = rosterSkill(players, ['DEF'], ['defense', 'physical', 'pace'], base);
+  const keeper = rosterSkill(players, ['ARQ'], ['goalkeeping'], base);
+  const pace = avg(players.map(p => playerSkill(p, 'pace')));
+  const passing = avg(players.map(p => playerSkill(p, 'passing')));
+  const setPieces = avg(players.map(p => playerSkill(p, 'setPieces')));
+  const spread = Math.max(attack, midfield, defense, keeper) - Math.min(attack, midfield, defense, keeper);
+  const chemistry = Math.max(62, Math.min(99, Math.round(94 - spread * .75 + passing * .045)));
+
+  let style = 'EQUILIBRADO';
+  if (attack >= defense + 5 && attack >= midfield + 3) style = 'ATAQUE TOTAL';
+  else if (defense >= attack + 5) style = 'BLOQUE DE ACERO';
+  else if (midfield >= attack && midfield >= defense && passing >= 82) style = 'DUEÑO DE LA PELOTA';
+  else if (pace >= 86) style = 'TRANSICIÓN ELÉCTRICA';
+
+  const tags = [];
+  if (setPieces >= 85) tags.push('PELOTA PARADA');
+  if (pace >= 86) tags.push('VELOCIDAD');
+  if (defense >= 87) tags.push('DEFENSA FUERTE');
+  if (attack >= 88) tags.push('MUCHO GOL');
+  if (passing >= 86) tags.push('BUEN PIE');
+  if (!tags.length) tags.push('EQUIPO PAREJO');
+
+  return {
+    attack: Math.round(attack),
+    midfield: Math.round(midfield),
+    defense: Math.round(defense),
+    keeper: Math.round(keeper),
+    chemistry,
+    style,
+    tags: tags.slice(0, 3),
+    pace: Math.round(pace),
+    passing: Math.round(passing),
+    setPieces: Math.round(setPieces)
+  };
+}
+
 const teamProfile = team => {
   const players = team.players?.length ? team.players : team.scorers || [];
   const base = team.strength || 80;
-  const avg = list => list.length ? list.reduce((sum, n) => sum + n, 0) / list.length : base;
-  const byPos = pos => players.filter(p => p.position === pos).map(p => p.rating || base);
-  const forwards = byPos('DEL'), mids = byPos('MED'), defs = byPos('DEF'), keepers = byPos('ARQ');
-  return {
-    overall: base,
-    attack: forwards.length ? avg(forwards) : base,
-    midfield: mids.length ? avg(mids) : base,
-    defense: defs.length ? avg(defs) : base,
-    keeper: keepers.length ? Math.max(...keepers) : base - 2
-  };
+  const attack = rosterSkill(players, ['DEL'], ['finishing', 'technique', 'pace'], base);
+  const midfield = rosterSkill(players, ['MED'], ['passing', 'technique', 'physical'], base);
+  const defense = rosterSkill(players, ['DEF'], ['defense', 'physical', 'pace'], base);
+  const keeper = rosterSkill(players, ['ARQ'], ['goalkeeping'], base);
+  const chemistry = team.identity?.chemistry || Math.round(base);
+  const setPieces = avg(players.map(p => playerSkill(p, 'setPieces'))) || base;
+  return { overall: base, attack, midfield, defense, keeper, chemistry, setPieces };
 };
 export function simulateMatch(a, b, options = {}) {
   const interactive = !!options.interactive;
@@ -125,10 +210,11 @@ export function simulateMatch(a, b, options = {}) {
   const midfieldEdge = (pa.midfield - pb.midfield) / 48;
   const keeperA = (pa.keeper - 85) / 45;
   const keeperB = (pb.keeper - 85) / 45;
+  const chemistryEdge = (pa.chemistry - pb.chemistry) / 95;
   const base = interactive ? .58 : 1.16;
   const cap = interactive ? 2.05 : 3.25;
-  const lambdaA = Math.max(.22, Math.min(cap, base + overallEdge + attackEdgeA + midfieldEdge - keeperB * .32));
-  const lambdaB = Math.max(.22, Math.min(cap, base - overallEdge + attackEdgeB - midfieldEdge - keeperA * .32));
+  const lambdaA = Math.max(.22, Math.min(cap, base + overallEdge + attackEdgeA + midfieldEdge + chemistryEdge * .18 - keeperB * .32));
+  const lambdaB = Math.max(.22, Math.min(cap, base - overallEdge + attackEdgeB - midfieldEdge - chemistryEdge * .18 - keeperA * .32));
   const goalsA = poisson(lambdaA), goalsB = poisson(lambdaB);
   const minutes = shuffle(Array.from({ length: 90 }, (_, i) => i + 1));
   let pens = null;
@@ -155,12 +241,27 @@ export function simulateMatch(a, b, options = {}) {
 export const teamStrength = team => team.squad.length ? team.squad.reduce((sum, p) => sum + byId(p.id).rating, 0) / team.squad.length : 0;
 export function botMove(state) {
   const a = state.auction, team = state.teams[a.turn], player = byId(a.id);
-  if (cardVisible(state) && player.rating < 80) return { type: 'pass' };
+  const personality = getBotPersonality(team.botPersonality);
+  const need = POSITIONS[player.position].quota - countPosition(team, player.position);
+  const urgency = Math.max(.86, 1 + (11 - team.squad.length <= 4 ? .08 : 0) + (need >= 2 ? .08 : 0));
+  const eventFactor = a.event?.botFactor || 1;
+
+  const visibleFloor = personality.id === 'galactico' ? 84 : personality.id === 'ahorrista' ? 82 : 79;
+  if (cardVisible(state) && player.rating < visibleFloor && need <= 1) return { type: 'pass' };
+
   const slots = 11 - team.squad.length;
   const cap = Math.min(maxBid(team), team.budget - (slots - 1) * 4);
-  const tier = player.rating <= 85 ? 10 : player.rating <= 93 ? 25 : 45;
+  const baseTier = player.rating <= 85 ? 10 : player.rating <= 93 ? 25 : 45;
+  const starBoost = player.rating >= 92 ? personality.starBias : player.rating <= 82 ? personality.bargain : 1;
   const perceived = Math.min(100, Math.max(1, player.rating + Math.random() * 10 - 5));
-  const interest = (perceived / 100) ** 3 * 60 + 3;
-  return a.price < Math.min(interest, cap, tier) ? { type: 'bid', amount: 1 } : { type: 'pass' };
+  const interest = ((perceived / 100) ** 3 * 60 + 3) * personality.aggression * starBoost * urgency * eventFactor;
+  const limit = Math.min(cap, baseTier * personality.aggression * starBoost, interest);
+
+  if (a.price < limit) {
+    const gap = limit - a.price;
+    const amount = gap > 12 && a.price + 5 <= cap && Math.random() > personality.patience * .55 ? 5 : gap > 5 && a.price + 2 <= cap ? 2 : 1;
+    return { type: 'bid', amount };
+  }
+  return { type: 'pass' };
 }
 export function standings(teams) { const sorted = teams.map((t, i) => ({ ...t, index: i, score: t.squad.reduce((sum, p) => sum + byId(p.id).rating, 0) })).sort((a, b) => b.score - a.score || b.budget - a.budget); return sorted.map((t, i) => ({ ...t, rank: i && t.score === sorted[i - 1].score && t.budget === sorted[i - 1].budget ? sorted.findIndex(s => s.score === t.score && s.budget === t.budget) + 1 : i + 1 })); }
