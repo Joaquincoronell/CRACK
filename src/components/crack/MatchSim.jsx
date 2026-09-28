@@ -331,10 +331,15 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
     }
 
     if (moment.game === 'freekick') {
-      const wallPenalty = selectedLane === 1 ? .07 : 0;
-      const goalChance = clamp(.9 - keeperEdge - wallPenalty - matchPressure * .12 + perfectCount * .08, .48, .97);
-      const success = clean && Math.random() < goalChance;
-      finishMoment(success, success ? '¡GOLAZO DE TIRO LIBRE!' : clean ? '¡VOLÓ EL ARQUERO!' : '¡A LA BARRERA!', success ? 'Potencia, rosca y dirección.' : clean ? 'El arquero sacó una imposible.' : 'La ejecución no salió limpia.', { lane: selectedLane });
+      // Si el jugador supera las dos fases del minijuego, el gol es suyo.
+      // La dificultad ya está expresada en el tamaño de las zonas y la velocidad de la aguja.
+      const success = clean;
+      finishMoment(
+        success,
+        success ? '¡GOLAZO DE TIRO LIBRE!' : '¡A LA BARRERA!',
+        success ? 'Potencia y rosca perfectas. Sin azar después del acierto.' : 'Falló una de las dos ejecuciones.',
+        { lane: selectedLane }
+      );
     }
 
     if (moment.game === 'longshot') {
@@ -345,11 +350,15 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
     }
 
     if (moment.game === 'cross') {
-      const duelEdge = (composure - rivalMetrics.defense) / 120;
-      const crowded = selectedLane === moment.defensiveLane;
-      const headerChance = clamp(.82 + duelEdge - (crowded ? .22 : 0) - fatigue * .2 + perfectCount * .08, .38, .96);
-      const success = clean && Math.random() < headerChance;
-      finishMoment(success, success ? '¡CABEZAZO Y GOL!' : clean ? '¡GANÓ EL DUELO EL CENTRAL!' : '¡MAL CENTRO!', success ? 'Centro medido y cabezazo de manual.' : clean ? 'La defensa ganó por arriba.' : 'La pelota no llegó limpia.', { lane: selectedLane });
+      // Centro correcto + timing correcto del cabezazo = gol garantizado.
+      // Defensa, presión y fatiga hacen más difícil acertar; no te quitan el gol después.
+      const success = clean;
+      finishMoment(
+        success,
+        success ? '¡CABEZAZO Y GOL!' : '¡MAL CENTRO!',
+        success ? 'Centro medido y cabezazo de manual. Lo hiciste perfecto.' : 'Falló el centro o el timing del cabezazo.',
+        { lane: selectedLane }
+      );
     }
   };
 
