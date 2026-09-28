@@ -308,3 +308,102 @@
 .sim-flash .longshot-goal{height:138px}
 .sim-flash .longshot-field{height:46px}
 .sim-flash .longshot-field>span{display:none}
+
+
+/* CRACK vNext — attributes, personalities, tactics and legacy */
+.card-attributes{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin:9px 0 5px}
+.card-attributes span{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:6px 3px;border:1px solid #394531;border-radius:4px;background:#11160f}
+.card-attributes b{font-family:'Arial Black',Impact,system-ui,sans-serif;font-size:13px;color:#e9efe5}
+.card-attributes small{font-size:5px;letter-spacing:.8px;color:#809076;margin-top:1px}
+
+.market-event{display:flex;flex-direction:column;gap:2px;margin:8px 0 14px;padding:9px 11px;border:1px solid #46553d;border-radius:5px;background:#182015}
+.market-event strong{font-size:7px;letter-spacing:1px;color:#c1fa41}
+.market-event span{font-size:8px;color:#a3b198;line-height:1.45}
+.market-event.event-hype{border-color:#79533e;background:#241a14}
+.market-event.event-hype strong{color:#ffb37d}
+.market-event.event-cold{border-color:#415266;background:#141b23}
+.market-event.event-cold strong{color:#a9c9ec}
+.market-event.event-scout{border-color:#59643d;background:#1a2014}
+.bot-turn-note span{display:block}
+.bot-turn-note b{color:#dec184;font-size:8px;letter-spacing:.5px}
+
+.team-mini-identity{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:5px;padding:7px 10px;border-top:1px solid #293326;background:#10150f}
+.team-mini-identity span{font-size:5px;letter-spacing:.65px;color:#6f7f67}
+.team-mini-identity b{display:block;font-size:7px;color:#b8c6b0;margin-bottom:1px}
+
+.halftime-tactics{padding:24px;background:radial-gradient(circle at 50% 0,#2d351e,#171c14 65%);border-bottom:1px solid #556145;text-align:center}
+.tactics-kicker{font-size:7px;letter-spacing:1.3px;color:#dec184}
+.halftime-tactics h3{font-family:'Arial Black',Impact,system-ui,sans-serif;font-size:20px;margin:7px 0 4px}
+.halftime-tactics>p{font-size:8px!important;color:#91a087;margin:0 0 15px!important}
+.tactic-options{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.tactic-options button{min-height:92px;padding:10px;border:1px solid #44523b;border-radius:6px;background:#11170f;color:#dce6d6;cursor:pointer;text-align:left;transition:transform .12s ease,border-color .12s ease,background .12s ease}
+.tactic-options button:hover{transform:translateY(-2px);border-color:#c1fa41;background:#192216}
+.tactic-options b{display:block;font-family:'Arial Black',Impact,system-ui,sans-serif;font-size:9px;color:#c1fa41;margin-bottom:5px}
+.tactic-options small{display:block;font-size:7px;line-height:1.45;color:#87947f}
+.tactic-chip.attack{border-color:#7d4b37!important;color:#ffad7a!important}
+.tactic-chip.close{border-color:#486076!important;color:#a9c9ec!important}
+.tactic-chip.balanced{border-color:#5c6947!important;color:#c1fa41!important}
+
+.identity-section{max-width:900px;margin:30px auto 10px;padding-top:26px;border-top:1px solid #2c3727}
+.identity-heading{text-align:center;margin-bottom:14px}
+.identity-heading .eyebrow{justify-content:center}
+.identity-heading h2{font-family:'Arial Black',Impact,system-ui,sans-serif;font-size:24px;margin:7px 0 0}
+.identity-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.identity-card{padding:15px;border:1px solid #3c4934;border-radius:7px;background:linear-gradient(145deg,#172014,#11160f)}
+.identity-card>div:first-child{display:flex;flex-direction:column;gap:2px}
+.identity-card>div:first-child small{font-size:6px;letter-spacing:.9px;color:#7d8c75;text-transform:uppercase}
+.identity-card>div:first-child strong{font-family:'Arial Black',Impact,system-ui,sans-serif;font-size:13px;color:#dec184}
+.identity-stats{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin:11px 0 8px}
+.identity-stats span{text-align:center;padding:6px 2px;border:1px solid #2e3929;border-radius:4px;background:#0f140e;font-size:5px;color:#697861}
+.identity-stats b{display:block;font-family:'Arial Black',Impact,system-ui,sans-serif;font-size:12px;color:#d9e2d4;margin-bottom:1px}
+.identity-card p{font-size:6px!important;letter-spacing:.65px;color:#91a087;margin:0!important}
+
+.crack-newspaper{max-width:760px;margin:42px auto 0;border:1px solid #d6cfba;background:#e8e2d2;color:#181815;box-shadow:0 15px 45px #0008;transform:rotate(-.25deg)}
+.newspaper-masthead{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;padding:10px 14px;border-bottom:4px double #1e1e1b;font-family:Georgia,'Times New Roman',serif}
+.newspaper-masthead span{font-weight:900;font-size:13px;letter-spacing:.8px}
+.newspaper-masthead small{font-size:7px;letter-spacing:1px}
+.newspaper-body{padding:19px 20px 21px}
+.newspaper-kicker{font-family:Arial,sans-serif;font-size:7px;font-weight:900;letter-spacing:1.5px}
+.newspaper-body>h2{font-family:Georgia,'Times New Roman',serif;font-size:37px;line-height:.95;letter-spacing:-1.4px;margin:7px 0 8px;text-transform:uppercase}
+.newspaper-deck{font-family:Georgia,'Times New Roman',serif;font-size:13px!important;line-height:1.35;margin:0 0 16px!important;color:#34342e}
+.newspaper-score{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;padding:13px 0;border-top:1px solid #706d62;border-bottom:1px solid #706d62;font-family:Arial,sans-serif}
+.newspaper-score span{font-size:9px;font-weight:900;text-transform:uppercase}
+.newspaper-score span:last-child{text-align:right}
+.newspaper-score strong{font-family:'Arial Black',Impact,system-ui,sans-serif;font-size:28px}
+.newspaper-columns{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-top:15px;border-top:1px solid #b1aa98;border-bottom:1px solid #b1aa98}
+.newspaper-columns>div{padding:11px 12px;border-right:1px solid #b1aa98}
+.newspaper-columns>div:last-child{border-right:0}
+.newspaper-columns small{display:block;font-family:Arial,sans-serif;font-size:6px;font-weight:900;letter-spacing:.9px;margin-bottom:5px}
+.newspaper-columns b{display:block;font-family:Georgia,'Times New Roman',serif;font-size:13px}
+.newspaper-columns span{display:block;font-family:Arial,sans-serif;font-size:7px;color:#4b4a43;margin-top:3px}
+.newspaper-share{display:flex;align-items:center;gap:6px;margin:15px auto 0;border:1px solid #262620;background:#262620;color:#f1ecdd;border-radius:4px;padding:9px 14px;font-family:Arial,sans-serif;font-size:8px;font-weight:900;cursor:pointer}
+
+.history-panel{max-width:760px;margin:22px auto 0;padding:18px;border:1px solid #3b4734;border-radius:8px;background:#121710}
+.history-title{display:flex;align-items:center;gap:9px;margin-bottom:12px}
+.history-title>svg{color:#dec184}
+.history-title span{font-size:6px;letter-spacing:1px;color:#7d8d74}
+.history-title h2{font-family:'Arial Black',Impact,system-ui,sans-serif;font-size:18px;margin:1px 0 0}
+.hall-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}
+.hall-grid>div{position:relative;padding:10px 7px;border:1px solid #303a2b;border-radius:5px;background:#0e130d;text-align:center}
+.hall-grid>div>b{position:absolute;left:5px;top:5px;font-size:6px;color:#5f6d59}
+.hall-grid span{display:block;font-size:7px;font-weight:800;min-height:20px;color:#bdc9b5}
+.hall-grid strong{display:block;font-family:'Arial Black',Impact,system-ui,sans-serif;font-size:18px;color:#c1fa41}
+.hall-grid small{display:block;font-size:5px;letter-spacing:.7px;color:#66735f}
+.recent-champions{margin-top:10px;border-top:1px solid #2b3427}
+.recent-champions p{display:flex;justify-content:space-between;gap:10px;margin:0!important;padding:7px 2px;border-bottom:1px solid #252e22;font-size:7px!important}
+.recent-champions b{color:#c6d2be}
+.recent-champions span{color:#74816e;text-align:right}
+
+@media(max-width:720px){
+  .tactic-options{grid-template-columns:1fr}
+  .tactic-options button{min-height:64px}
+  .identity-grid{grid-template-columns:1fr}
+  .identity-stats{grid-template-columns:repeat(5,1fr)}
+  .newspaper-body>h2{font-size:28px}
+  .newspaper-columns{grid-template-columns:1fr}
+  .newspaper-columns>div{border-right:0;border-bottom:1px solid #b1aa98}
+  .newspaper-columns>div:last-child{border-bottom:0}
+  .hall-grid{grid-template-columns:repeat(2,1fr)}
+  .recent-champions p{flex-direction:column;gap:2px}
+  .recent-champions span{text-align:left}
+}
