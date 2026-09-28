@@ -70,6 +70,7 @@ function settle(state) {
   return { ...state, auction: { ...a, turn } };
 }
 export function gameReducer(state, action) {
+  if (action.type === 'abandon') return null;
   if (action.type === 'new') return newGame(action.players, action.mode);
   if (action.type === 'next' && state.phase === 'reveal') return nextAuction({ ...state, notice: '' });
   if (action.type === 'startTournament' && state.phase === 'finished' && !state.tournament) return { ...state, tournament: buildTournament(state) };
