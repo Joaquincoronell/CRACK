@@ -75,7 +75,7 @@ const skillScale = rating => clamp(.8 + ((rating || 80) - 68) * .013, .78, 1.24)
 const matchDifficulty = (a, b, userSide, round) => {
   const me = userSide === 0 ? a : b;
   const rival = userSide === 0 ? b : a;
-  const roundBase = [1, 1.13, 1.3][round] || 1;
+  const roundBase = [0.94, 1.06, 1.2][round] || .94;
   const strengthEdge = clamp((rival.strength - me.strength) / 20, -.2, .3);
   return clamp(roundBase + strengthEdge, .82, 1.62);
 };
@@ -218,8 +218,8 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
     };
     const p = (profiles[m.game] || profiles.penal)[currentStep] || profiles.penal[0];
     const skill = skillScale(composure);
-    const width = clamp(p.width * skill * environment.surface.control / dynamicDifficulty, 7, 36);
-    const speed = clamp(p.speed * dynamicDifficulty * environment.surface.speed / skill, 1.55, 5.1);
+    const width = clamp(p.width * 1.16 * skill * environment.surface.control / dynamicDifficulty, 8, 39);
+    const speed = clamp(p.speed * .9 * dynamicDifficulty * environment.surface.speed / skill, 1.4, 4.6);
     return { label: p.label, width, speed };
   };
 
@@ -297,7 +297,7 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
       setReactionCue(true);
       const keeperRating = moment.keeper?.rating || myMetrics.keeper || 80;
       const keeperSkill = skillScale(keeperRating + (ROLE_BONUS.save.ARQ || 0));
-      const windowMs = clamp(1040 * keeperSkill / dynamicDifficulty * (1 - fatigue * .35), 410, 1250);
+      const windowMs = clamp(1190 * keeperSkill / dynamicDifficulty * (1 - fatigue * .3), 500, 1400);
       reactionTimeout.current = setTimeout(() => finishMoment(false, '¡GOL RIVAL!', 'Llegaste tarde al remate.', { lane: moment.targetLane }), windowMs);
     }, 420 + rand(450));
     return () => {
@@ -368,7 +368,7 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
     const keeperRating = moment.keeper?.rating || rivalMetrics.keeper;
     const readKeeper = lane !== moment.keeperLane;
     const finishingEdge = (composure - keeperRating) / 100;
-    const chance = clamp(.76 + finishingEdge - matchPressure * .12 - fatigue * .16, .45, .95);
+    const chance = clamp(.81 + finishingEdge - matchPressure * .1 - fatigue * .13, .52, .97);
     const goal = readKeeper && Math.random() < chance;
     finishMoment(goal, goal ? '¡DEFINICIÓN PERFECTA!' : readKeeper ? '¡SE HIZO GIGANTE!' : '¡LO LEYÓ!', goal ? moment.player.name + ' esperó al arquero.' : readKeeper ? 'Elegiste bien, pero el arquero llegó.' : 'El arquero leyó la intención.', { lane });
   };
@@ -377,7 +377,7 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
     setSelectedLane(lane);
     const read = lane !== moment.pressureLane;
     const transitionEdge = (myMetrics.midfield + myMetrics.attack - rivalMetrics.midfield - rivalMetrics.defense) / 220;
-    const chance = clamp(.67 + transitionEdge + (composure - 80) * .006 - dynamicDifficulty * .08, .38, .91);
+    const chance = clamp(.72 + transitionEdge + (composure - 80) * .0065 - dynamicDifficulty * .065, .46, .94);
     const goal = read && Math.random() < chance;
     finishMoment(goal, goal ? '¡CONTRA LETAL!' : read ? '¡LA CORTARON AL FINAL!' : '¡TE ENCERRARON!', goal ? 'Leíste el espacio y atacaste a máxima velocidad.' : read ? 'La lectura fue buena; faltó la última.' : 'Entraste justo donde estaba la superioridad rival.', { lane });
   };
@@ -392,7 +392,7 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
     if (reactionTimeout.current) clearTimeout(reactionTimeout.current);
     const correct = lane === moment.targetLane;
     const keeperRating = moment.keeper?.rating || myMetrics.keeper;
-    const lateSaveChance = clamp(.86 + (keeperRating - 85) * .008 - dynamicDifficulty * .07 - fatigue * .16, .58, .97);
+    const lateSaveChance = clamp(.9 + (keeperRating - 85) * .008 - dynamicDifficulty * .055 - fatigue * .13, .66, .98);
     const save = correct && Math.random() < lateSaveChance;
     finishMoment(save, save ? '¡ATAJADÓN!' : correct ? '¡LE PASÓ POR ABAJO!' : '¡GOL RIVAL!', save ? moment.keeper.name + ' reaccionó a puro reflejo.' : correct ? 'Llegaste al palo, pero no alcanzó.' : 'Fuiste al lugar equivocado.', { lane: moment.targetLane });
   };
