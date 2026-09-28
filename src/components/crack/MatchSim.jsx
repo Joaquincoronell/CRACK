@@ -208,22 +208,20 @@ function FreeKickChoiceStage({ blockedLane, onPick, selectedLane = null }) {
   </div>;
 }
 
-function CrossChoiceStage({ blockedLane, onPick, selectedLane = null }) {
-  return <div className="cross-choice-stage">
+function CrossChoiceStage({ onPick, selectedLane = null }) {
+  return <div className="cross-choice-stage mystery-cross">
     <div className="cross-box-line" />
     <div className="cross-goal-mini" />
     {[0, 1, 2].map(i => <button
       key={i}
       type="button"
-      className={'cross-zone lane-' + i + (i === blockedLane ? ' blocked' : ' open') + (selectedLane === i ? ' selected' : '')}
+      className={'cross-zone mystery lane-' + i + (selectedLane === i ? ' selected' : '')}
       onClick={() => onPick?.(i)}
       disabled={!onPick}
     >
       <span>{CROSS_LANES[i]}</span>
-      {i === blockedLane
-        ? <div className="cross-crowd"><i /><i /><i /></div>
-        : <div className="cross-runner"><i /><b>9</b></div>}
-      <small>{i === blockedLane ? '3 DEFENSORES' : 'ATACANTE SOLO'}</small>
+      <div className="cross-mystery-mark">?</div>
+      <small>ZONA MISTERIOSA</small>
     </button>)}
     <div className="cross-ball-origin">⚽</div>
   </div>;
@@ -377,8 +375,8 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
   const timingProfile = (m, currentStep) => {
     const profiles = {
       penal: [{ label: 'PRECISIÓN', width: 25, speed: 2.2 }],
-      freekick: [{ label: 'ROSCA', width: 31, speed: 2.05 }],
-      cross: [{ label: 'MOMENTO DEL CENTRO', width: 33, speed: 2.15 }],
+      freekick: [{ label: 'ROSCA', width: 18, speed: 3.25 }],
+      cross: [{ label: 'POTENCIA', width: 15, speed: 3.65 }],
       longshot: [{ label: 'CONTACTO', width: 29, speed: 2.35 }],
       counter: [{ label: 'ÚLTIMO PASE', width: 34, speed: 2.25 }]
     };
@@ -515,12 +513,17 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
     }
 
     if (moment.game === 'cross') {
-      const open = selectedLane !== moment.defensiveLane;
-      const success = clean && open;
+      const foundTarget = selectedLane === moment.targetLane;
+      const success = clean && foundTarget;
+      const targetName = CROSS_LANES[moment.targetLane];
       finishMoment(
         success,
-        success ? '¡CABEZAZO Y GOL!' : open ? '¡CENTRO PASADO!' : '¡DESPEJÓ LA DEFENSA!',
-        success ? 'Viste al libre y pusiste el centro en el momento justo.' : open ? 'La zona era buena, pero el centro salió tarde.' : 'Mandaste la pelota al sector más cargado.',
+        success ? '¡CABEZAZO Y GOL!' : foundTarget ? '¡CENTRO PASADO!' : '¡NO ESTABA AHÍ!',
+        success
+          ? 'Elegiste la zona correcta y clavaste la potencia.'
+          : foundTarget
+            ? 'Encontraste al receptor, pero fallaste la potencia.'
+            : 'La zona correcta era ' + targetName + '.',
         { lane: selectedLane }
       );
       return;
@@ -762,20 +765,22 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
       </>}
 
       {moment.game === 'freekick' && moment.attack && <>
-        <p>{selectedLane === null ? <>Leé la barrera: hay <b>2 sectores abiertos</b>. Elegí uno.</> : <>Objetivo elegido. Falta clavar la <b>rosca</b>.</>}</p>
+        <p>{selectedLane === null ? <>Leé la barrera: hay <b>2 sectores abiertos</b>. Elegí uno.</> : <>Objetivo elegido. La <b>rosca</b> ahora es mucho más exigente.</>}</p>
         <FreeKickChoiceStage blockedLane={moment.defensiveLane} selectedLane={selectedLane} onPick={selectedLane === null ? chooseFreeKick : null} />
         {selectedLane !== null && currentTiming && <div className="skill-execution">
-          <div className="timing-label">{currentTiming.label}</div>
+          <div className="timing-label">{currentTiming.label} · DIF. ALTA</div>
           <div className="moment-track"><div className="moment-zone goal" style={{ left: ((moment.centers?.[0] ?? 50) - currentTiming.width / 2) + '%', width: currentTiming.width + '%' }} /><div className="moment-needle" style={{ left: needle + '%' }} /></div>
           <button className="moment-btn moment-stop" onClick={stopTiming}>¡PATEAR!</button>
         </div>}
       </>}
 
       {moment.game === 'cross' && moment.attack && <>
-        <p>{selectedLane === null ? <>Buscá al libre: hay <b>2 zonas buenas</b> y una cargada.</> : <>Ya viste el pase. Ahora meté el centro en el <b>momento justo</b>.</>}</p>
-        <CrossChoiceStage blockedLane={moment.defensiveLane} selectedLane={selectedLane} onPick={selectedLane === null ? chooseCross : null} />
-        {selectedLane !== null && currentTiming && <div className="skill-execution">
-          <div className="timing-label">{currentTiming.label}</div>
+        <p>{selectedLane === null
+          ? <>Elegí una de las <b>3 zonas misteriosas</b>. Solo una tiene al receptor: 1 de 3.</>
+          : <>Zona elegida. Ahora clavá la <b>potencia</b> · dificultad 8.5/10.</>}</p>
+        <CrossChoiceStage selectedLane={selectedLane} onPick={selectedLane === null ? chooseCross : null} />
+        {selectedLane !== null && currentTiming && <div className="skill-execution hard-execution">
+          <div className="timing-label">{currentTiming.label} · DIF. 8.5/10</div>
           <div className="moment-track"><div className="moment-zone goal" style={{ left: ((moment.centers?.[0] ?? 50) - currentTiming.width / 2) + '%', width: currentTiming.width + '%' }} /><div className="moment-needle" style={{ left: needle + '%' }} /></div>
           <button className="moment-btn moment-stop" onClick={stopTiming}>¡CENTRAR!</button>
         </div>}
