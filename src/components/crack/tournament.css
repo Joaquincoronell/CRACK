@@ -407,3 +407,11 @@
   .recent-champions p{flex-direction:column;gap:2px}
   .recent-champions span{text-align:left}
 }
+
+
+/* Opening skips */
+.skip-player-button{border-color:#6c7747!important;background:#182014!important;color:#c1fa41!important}
+.skip-player-button:hover{background:#202b19!important}
+.forced-buy-button{border-color:#8a5a3d!important;background:#281b14!important;color:#ffbd8b!important}
+.skip-count b{color:#dec184!important}
+.skip-count em{color:#66735f!important}
