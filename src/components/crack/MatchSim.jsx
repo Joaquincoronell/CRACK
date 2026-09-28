@@ -150,19 +150,16 @@ function LongShotChoiceStage({ keeperZone, defenderZone, onPick = null, selected
       <div className="goal-net" />
 
       {LONGSHOT_ZONES.map((label, i) => {
-        const keeperCovered = i === keeperZone;
-        const defenderBlocked = i === defenderZone;
-        const open = !keeperCovered && !defenderBlocked;
         const selected = selectedZone === i || resultZone === i;
         return <button
           key={label}
           type="button"
-          className={'longshot-zone zone-' + i + (open ? ' open' : keeperCovered ? ' keeper-covered' : ' defender-blocked') + (selected ? ' selected' : '')}
+          className={'longshot-zone zone-' + i + (selected ? ' selected' : '')}
           onClick={() => onPick?.(i)}
           disabled={!onPick}
         >
-          <span>{open ? '◎' : keeperCovered ? '🧤' : '●'}</span>
-          <small>{open ? label : keeperCovered ? 'ARQUERO' : 'DEFENSOR'}</small>
+          <span>{selected ? '◎' : ''}</span>
+          <small>{label}</small>
         </button>;
       })}
 
@@ -377,7 +374,7 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
       penal: [{ label: 'PRECISIÓN', width: 25, speed: 2.2 }],
       freekick: [{ label: 'ROSCA', width: 18, speed: 3.25 }],
       cross: [{ label: 'POTENCIA', width: 15, speed: 3.65 }],
-      longshot: [{ label: 'CONTACTO', width: 29, speed: 2.35 }],
+      longshot: [{ label: 'CONTACTO', width: 17, speed: 3.45 }],
       counter: [{ label: 'ÚLTIMO PASE', width: 34, speed: 2.25 }]
     };
     const p = (profiles[m.game] || profiles.penal)[currentStep] || profiles.penal[0];
@@ -750,15 +747,17 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
       </>}
 
       {moment.game === 'longshot' && moment.attack && <>
-        <p>{selectedLane === null ? <>Levantá la cabeza: hay <b>2 huecos limpios</b>. Elegí uno.</> : <>Zona elegida. Ahora clavá el <b>contacto</b>.</>}</p>
+        <p>{selectedLane === null
+          ? <>Leé la posición del <b>arquero y del defensor</b>. No te marco el hueco: elegí uno de los 4 sectores.</>
+          : <>Sector elegido. Ahora clavá el <b>contacto</b> · dificultad 8/10.</>}</p>
         <LongShotChoiceStage
           keeperZone={moment.longshotKeeperZone}
           defenderZone={moment.longshotDefenderZone}
           selectedZone={selectedLane}
           onPick={selectedLane === null ? chooseLongShot : null}
         />
-        {selectedLane !== null && currentTiming && <div className="skill-execution">
-          <div className="timing-label">{currentTiming.label}</div>
+        {selectedLane !== null && currentTiming && <div className="skill-execution hard-execution">
+          <div className="timing-label">{currentTiming.label} · DIF. 8/10</div>
           <div className="moment-track"><div className="moment-zone goal" style={{ left: ((moment.centers?.[0] ?? 50) - currentTiming.width / 2) + '%', width: currentTiming.width + '%' }} /><div className="moment-needle" style={{ left: needle + '%' }} /></div>
           <button className="moment-btn moment-stop" onClick={stopTiming}>¡PEGARLE!</button>
         </div>}
