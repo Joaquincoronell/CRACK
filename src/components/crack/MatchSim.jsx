@@ -848,9 +848,9 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
 
   return <div className="match-sim">
     <div className="sim-board">
-      <div className={'sim-team ' + (a.isPlayer ? 'me' : '')}><strong>{a.name}</strong><span>{a.isPlayer ? 'SUBASTADO' : 'LEYENDA'}</span></div>
+      <div className={'sim-team ' + (a.isHuman ? 'me' : '')}><strong>{a.name}</strong><span>{a.isAuctionTeam ? (a.isBot ? 'BOTACIONAL' : 'SUBASTADO') : 'LEYENDA'}</span></div>
       <div className="sim-score"><b>{goalsA}–{goalsB}</b><span>{finished ? <><Clock size={13} /> FINAL</> : <><Clock size={13} /> {minute}′</>}</span></div>
-      <div className={'sim-team ' + (b.isPlayer ? 'me' : '')}><strong>{b.name}</strong><span>{b.isPlayer ? 'SUBASTADO' : 'LEYENDA'}</span></div>
+      <div className={'sim-team ' + (b.isHuman ? 'me' : '')}><strong>{b.name}</strong><span>{b.isAuctionTeam ? (b.isBot ? 'BOTACIONAL' : 'SUBASTADO') : 'LEYENDA'}</span></div>
     </div>
 
     <div className="sim-meta">
