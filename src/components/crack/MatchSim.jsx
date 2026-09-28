@@ -4,6 +4,7 @@ import { Clock, Swords, Shield, Target, Zap, Gauge, Activity } from 'lucide-reac
 const PHRASES = ['¡GOLAZO!', '¡De penal!', '¡Golpe de efecto!', '¡Qué definición!', '¡De cabeza al ángulo!', '¡Contragolpe letal!', '¡Zurdazo imposible!', '¡La picó por encima del arquero!', '¡Palomita!', '¡La rompió al palo izquierdo!'];
 const LANES = ['IZQUIERDA', 'CENTRO', 'DERECHA'];
 const CROSS_LANES = ['PRIMER PALO', 'PUNTO PENAL', 'SEGUNDO PALO'];
+const PENALTY_ZONES = ['ARRIBA IZQ.', 'ARRIBA CENTRO', 'ARRIBA DER.', 'ABAJO IZQ.', 'ABAJO CENTRO', 'ABAJO DER.'];
 const GAME_LABELS = {
   penal: 'PENAL',
   freekick: 'TIRO LIBRE',
@@ -35,6 +36,12 @@ const ROLE_BONUS = {
 };
 
 const rand = n => Math.floor(Math.random() * n);
+const makeBadPenaltyZones = () => {
+  const first = rand(6);
+  let second = rand(5);
+  if (second >= first) second += 1;
+  return [first, second];
+};
 const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
 const average = values => values.length ? values.reduce((a, b) => a + b, 0) / values.length : 0;
 
@@ -117,6 +124,36 @@ function PitchStage({ pressureLane, selectedLane = null, onPick }) {
       {i === pressureLane ? <><i className="defender-dot d1" /><i className="defender-dot d2" /><i className="defender-dot d3" /></> : <i className="defender-dot d1" />}
     </button>)}
     <div className="pitch-ball">⚽</div>
+  </div>;
+}
+
+function ShootoutSixZone({ onPick, selected = null, badZones = [], reveal = false, result = null }) {
+  return <div className={'six-zone-goal' + (reveal ? ' reveal' : '')}>
+    <div className="six-zone-net" />
+    <div className="six-zone-keeper">
+      <i className="keeper-head" />
+      <i className="keeper-body" />
+      <i className="keeper-arm left" />
+      <i className="keeper-arm right" />
+      <i className="keeper-leg left" />
+      <i className="keeper-leg right" />
+    </div>
+    {PENALTY_ZONES.map((label, i) => {
+      const bad = badZones.includes(i);
+      return <button
+        key={label}
+        type="button"
+        className={'six-zone-cell zone-' + i + (selected === i ? ' selected' : '') + (reveal ? (bad ? ' no-goal' : ' goal-zone') : '')}
+        onClick={() => onPick?.(i)}
+        disabled={!onPick}
+      >
+        <span>{label}</span>
+        {reveal && <small>{bad ? 'NO GOL' : 'GOL'}</small>}
+      </button>;
+    })}
+    {result && <div className={'six-zone-ball ' + (result.goal ? 'goal' : 'miss') + ' zone-' + result.zone}>⚽</div>}
+    <div className="six-zone-spot">⚽</div>
+    <div className="six-zone-boot"><i /></div>
   </div>;
 }
 
@@ -401,28 +438,21 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
     setShootDir(null);
     setShootFlash(null);
     setNeedle(0);
-    setShootout({ active: true, a: 0, b: 0, kicksA: 0, kicksB: 0, turn: 0, done: false, winner: null, opponentDir: rand(3) });
+    setShootout({
+      active: true,
+      a: 0,
+      b: 0,
+      kicksA: 0,
+      kicksB: 0,
+      turn: 0,
+      done: false,
+      winner: null,
+      badZones: makeBadPenaltyZones()
+    });
   };
 
   const shootSide = shootout ? shootout.turn % 2 : null;
   const userShooting = shootout?.active && shootSide === userSide;
-
-  useEffect(() => {
-    if (!shootout?.active || shootout.done || !userShooting || shootDir === null) return;
-    let pos = 0;
-    let dir = 1;
-    const shooter = pickPlayer(userTeam, ['DEL', 'MED']);
-    const shootPressure = clamp(environment.crowd + round * .06 + (shootout.turn >= 8 ? .12 : 0), .08, .45);
-    const effective = shooter.rating - shootPressure * 20;
-    const speed = clamp(3 * baseDifficulty / skillScale(effective), 2.2, 4.9);
-    const timer = setInterval(() => {
-      pos += dir * speed;
-      if (pos >= 100) { pos = 100; dir = -1; }
-      if (pos <= 0) { pos = 0; dir = 1; }
-      setNeedle(pos);
-    }, 28);
-    return () => clearInterval(timer);
-  }, [shootout?.turn, shootout?.active, shootout?.done, userShooting, shootDir, baseDifficulty, round]);
 
   const recordShootoutKick = goal => {
     setShootout(s => {
@@ -441,34 +471,58 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
       if (next.b > next.a + remA) winner = 1;
       if (next.kicksA >= 5 && next.kicksB >= 5 && next.kicksA === next.kicksB && next.a !== next.b) winner = next.a > next.b ? 0 : 1;
       if (winner !== null) return { ...next, done: true, winner };
-      return { ...next, turn: s.turn + 1, opponentDir: rand(3) };
+
+      const nextTurn = s.turn + 1;
+      return {
+        ...next,
+        turn: nextTurn,
+        badZones: nextTurn % 2 === userSide ? makeBadPenaltyZones() : next.badZones
+      };
     });
     setShootDir(null);
     setNeedle(0);
   };
 
-  const shootPenalty = () => {
-    if (shootDir === null) return;
-    const shooter = pickPlayer(userTeam, ['DEL', 'MED']);
-    const width = clamp(25 * skillScale(shooter.rating - matchPressure * 16) / baseDifficulty, 10, 31);
-    const distance = Math.abs(needle - 50);
-    const onTarget = distance <= width / 2;
-    const perfect = distance <= width * .14;
-    const keeperLane = rand(3);
-    const goal = onTarget && (keeperLane !== shootDir || perfect);
-    setShootFlash({ text: goal ? '¡GOL!' : onTarget ? '¡ATAJÓ!' : '¡AFUERA!', goal, lane: shootDir, keeperLane });
-    setTimeout(() => { setShootFlash(null); recordShootoutKick(goal); }, 850);
+  const shootPenaltyZone = zone => {
+    if (!shootout?.active || shootout.done || !userShooting || shootFlash) return;
+    const badZones = shootout.badZones || [];
+    const goal = !badZones.includes(zone);
+    setShootDir(zone);
+    setShootFlash({
+      text: goal ? '¡GOL!' : '¡NO GOL!',
+      goal,
+      zone,
+      badZones,
+      playerKick: true
+    });
+    setTimeout(() => {
+      setShootFlash(null);
+      recordShootoutKick(goal);
+    }, 1050);
   };
 
-  const saveShootoutPenalty = lane => {
-    const shooterQuality = rivalMetrics.attack;
-    const missChance = clamp(.07 - (shooterQuality - 85) * .003, .015, .08);
-    const miss = Math.random() < missChance;
-    const save = !miss && lane === shootout.opponentDir;
-    const goal = !miss && !save;
-    setShootFlash({ text: miss ? '¡AFUERA!' : save ? '¡ATAJASTE!' : '¡GOL RIVAL!', goal, lane: shootout.opponentDir, keeperLane: lane });
-    setTimeout(() => { setShootFlash(null); recordShootoutKick(goal); }, 850);
+  const resolveRivalPenalty = () => {
+    if (!shootout?.active || shootout.done || userShooting || shootFlash) return;
+    // El rival también tiene 4 resultados de gol sobre 6 posibles.
+    const goal = rand(6) < 4;
+    const zone = rand(6);
+    setShootFlash({
+      text: goal ? '¡GOL RIVAL!' : '¡LO ERRÓ!',
+      goal,
+      zone,
+      rivalKick: true
+    });
+    setTimeout(() => {
+      setShootFlash(null);
+      recordShootoutKick(goal);
+    }, 1050);
   };
+
+  useEffect(() => {
+    if (!shootout?.active || shootout.done || userShooting || shootFlash) return;
+    const timer = setTimeout(resolveRivalPenalty, 850);
+    return () => clearTimeout(timer);
+  }, [shootout?.turn, shootout?.active, shootout?.done, userShooting, shootFlash]);
 
   const finish = () => {
     onFinish({
@@ -560,26 +614,21 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
         <p>{shootout.winner === userSide ? 'La presión era máxima y no temblaste.' : 'La tanda fue cruel. La revancha queda servida.'}</p>
         <button className="primary-button" onClick={finish}><Swords size={16} />Continuar</button>
       </> : shootFlash ? <>
-        <GoalStage mode="shootout-result" keeperLane={shootFlash.keeperLane} result={{ goal: shootFlash.goal, lane: shootFlash.lane }} />
+        {shootFlash.playerKick
+          ? <ShootoutSixZone selected={shootFlash.zone} badZones={shootFlash.badZones} reveal result={{ goal: shootFlash.goal, zone: shootFlash.zone }} />
+          : <ShootoutSixZone selected={shootFlash.zone} reveal result={{ goal: shootFlash.goal, zone: shootFlash.zone }} />}
         <div className="shootout-flash">{shootFlash.text}</div>
       </> : userShooting ? <>
         <h3>Patea {sideName}</h3>
-        {shootDir === null ? <>
-          <p>Elegí el rincón. Después vas a tener que clavar el timing.</p>
-          <GoalStage mode="shootout" keeperLane={1} onPick={setShootDir} />
-        </> : <>
-          <p>Elegiste <b>{LANES[shootDir]}</b>. Ahora no tiembles.</p>
-          <GoalStage mode="shootout" keeperLane={1} selectedLane={shootDir} />
-          <div className="moment-track shootout-track">
-            <div className="moment-zone goal" style={{ left: '39%', width: '22%' }} />
-            <div className="moment-needle" style={{ left: needle + '%' }} />
-          </div>
-          <button className="moment-btn" onClick={shootPenalty}>¡PATEAR!</button>
-        </>}
+        <p>Elegí una de las <b>6 zonas</b>. En cada penal hay <b>4 zonas de gol y 2 de no gol</b>. Recién se revelan después de patear.</p>
+        <ShootoutSixZone onPick={shootPenaltyZone} badZones={shootout.badZones || []} />
       </> : <>
-        <h3>¡ATAJÁ EL PENAL!</h3>
-        <p>Elegí el palo antes del remate de {sideName}.</p>
-        <GoalStage mode="shootout-save" keeperLane={1} onPick={saveShootoutPenalty} defensive />
+        <h3>Patea {sideName}</h3>
+        <p>El penal rival se resuelve al azar: puede ser gol o puede fallar.</p>
+        <div className="rival-penalty-wait">
+          <span>⚽</span>
+          <strong>EL RIVAL TOMA CARRERA…</strong>
+        </div>
       </>}
     </div>;
   };
