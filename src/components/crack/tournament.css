@@ -247,3 +247,40 @@
   .cross-choice-stage{height:215px}
   .cross-zone>span{font-size:6px}
 }
+
+
+/* Match simulation v5 — visual long-shot minigame */
+.longshot-stage{position:relative;max-width:520px;margin:14px auto 8px;padding:22px 18px 0;border:1px solid #3b4934;border-radius:9px;background:radial-gradient(circle at 50% 10%,#2d3828,#171e15 62%,#0d120c);overflow:hidden;box-shadow:inset 0 0 36px #0008}
+.longshot-goal{position:relative;width:92%;height:178px;margin:0 auto;border:4px solid #edf1e9;border-bottom-width:6px;box-shadow:0 8px 22px #0008;overflow:hidden}
+.longshot-goal .goal-net{position:absolute;inset:0}
+.longshot-zone{position:absolute;width:50%;height:50%;border:0;border-right:1px dashed #ffffff28;border-bottom:1px dashed #ffffff28;background:transparent;cursor:pointer;z-index:7;transition:background .14s ease,box-shadow .14s ease}
+.longshot-zone.zone-0{left:0;top:0}.longshot-zone.zone-1{left:50%;top:0;border-right:0}.longshot-zone.zone-2{left:0;top:50%;border-bottom:0}.longshot-zone.zone-3{left:50%;top:50%;border-right:0;border-bottom:0}
+.longshot-zone.open:hover{background:#c1fa4112;box-shadow:inset 0 0 26px #c1fa4122}
+.longshot-zone.keeper-covered{background:#dec18410}
+.longshot-zone.defender-blocked{background:#a74e3814}
+.longshot-zone>span{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);font-size:27px;color:#c1fa41;text-shadow:0 0 11px #c1fa4166}
+.longshot-zone.keeper-covered>span{font-size:21px;color:#dec184}
+.longshot-zone.defender-blocked>span{font-size:20px;color:#e58c79}
+.longshot-zone>small{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);font-size:6px;letter-spacing:.65px;color:#aab7a2;white-space:nowrap}
+.longshot-zone.open>small{color:#c1fa41}
+.longshot-zone.keeper-covered>small{color:#dec184}
+.longshot-zone.defender-blocked>small{color:#e58c79}
+
+.longshot-keeper{position:absolute;width:38px;height:78px;transform:translate(-50%,-50%) scale(.92);z-index:5;pointer-events:none;opacity:.78}
+.longshot-keeper .keeper-body,.longshot-keeper .keeper-arm,.longshot-keeper .keeper-leg{background:#dec184}
+.longshot-defender{position:absolute;width:31px;height:48px;z-index:5;pointer-events:none;opacity:.85}
+.longshot-defender.zone-0{left:22%;top:20%}.longshot-defender.zone-1{right:20%;top:20%}.longshot-defender.zone-2{left:22%;bottom:10%}.longshot-defender.zone-3{right:20%;bottom:10%}
+.longshot-defender i{position:absolute;left:50%;top:0;transform:translateX(-50%);width:13px;height:13px;border-radius:50%;background:#d0a58a}
+.longshot-defender b{position:absolute;left:50%;top:13px;transform:translateX(-50%);display:flex;align-items:center;justify-content:center;width:23px;height:30px;border-radius:5px;background:#b8695a;color:#fff;font-family:'Arial Black',Impact,system-ui,sans-serif;font-size:8px}
+
+.longshot-field{height:64px;position:relative;margin:0 -18px;background:linear-gradient(#21331b,#2b4422);border-top:1px solid #4a6740}
+.longshot-field:before{content:'';position:absolute;left:50%;top:-1px;width:170px;height:44px;border:1px solid #ffffff2b;border-top:0;border-radius:0 0 85px 85px;transform:translateX(-50%)}
+.longshot-ball{position:absolute;left:50%;top:18px;transform:translateX(-50%);font-size:18px;z-index:3}
+.longshot-boot{position:absolute;left:calc(50% - 51px);bottom:7px;width:42px;height:17px;background:#f0f1ec;clip-path:polygon(0 32%,58% 32%,77% 0,100% 20%,91% 63%,63% 100%,8% 90%);transform:rotate(-10deg);filter:drop-shadow(0 3px 2px #0008)}
+.longshot-boot i{position:absolute;left:9px;top:5px;width:16px;height:2px;background:#8b9584;box-shadow:0 4px 0 #8b9584}
+.longshot-field>span{position:absolute;right:12px;bottom:8px;font-size:5px;letter-spacing:.8px;color:#7f8f77}
+
+@media(max-width:720px){
+  .longshot-goal{height:150px}
+  .longshot-zone>span{font-size:23px}
+}
