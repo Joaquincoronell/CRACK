@@ -5,6 +5,7 @@ const PHRASES = ['¡GOLAZO!', '¡De penal!', '¡Golpe de efecto!', '¡Qué defin
 const LANES = ['IZQUIERDA', 'CENTRO', 'DERECHA'];
 const CROSS_LANES = ['PRIMER PALO', 'PUNTO PENAL', 'SEGUNDO PALO'];
 const PENALTY_ZONES = ['ARRIBA IZQ.', 'ARRIBA CENTRO', 'ARRIBA DER.', 'ABAJO IZQ.', 'ABAJO CENTRO', 'ABAJO DER.'];
+const LONGSHOT_ZONES = ['ÁNGULO IZQ.', 'ÁNGULO DER.', 'ABAJO IZQ.', 'ABAJO DER.'];
 const GAME_LABELS = {
   penal: 'PENAL',
   freekick: 'TIRO LIBRE',
@@ -39,6 +40,12 @@ const rand = n => Math.floor(Math.random() * n);
 const makeBadPenaltyZones = () => {
   const first = rand(6);
   let second = rand(5);
+  if (second >= first) second += 1;
+  return [first, second];
+};
+const makeDistinctZones = n => {
+  const first = rand(n);
+  let second = rand(n - 1);
   if (second >= first) second += 1;
   return [first, second];
 };
@@ -109,6 +116,39 @@ function GoalStage({ mode, keeperLane = 1, targetLane = 1, selectedLane = null, 
     <div className="penalty-grass">
       <div className="ball-start">⚽</div>
       <div className="boot-shape"><i /></div>
+    </div>
+  </div>;
+}
+
+function LongShotChoiceStage({ keeperZone, defenderZone, onPick }) {
+  const keeperLeft = [26, 74, 26, 74][keeperZone] || 50;
+  const keeperTop = keeperZone < 2 ? 26 : 58;
+  return <div className="longshot-stage">
+    <div className="longshot-goal">
+      <div className="goal-net" />
+      {LONGSHOT_ZONES.map((label, i) => {
+        const keeperCovered = i === keeperZone;
+        const defenderBlocked = i === defenderZone;
+        const open = !keeperCovered && !defenderBlocked;
+        return <button
+          key={label}
+          type="button"
+          className={'longshot-zone zone-' + i + (open ? ' open' : keeperCovered ? ' keeper-covered' : ' defender-blocked')}
+          onClick={() => onPick(i)}
+        >
+          <span>{open ? '◎' : keeperCovered ? '🧤' : '●'}</span>
+          <small>{open ? label : keeperCovered ? 'ARQUERO' : 'DEFENSOR'}</small>
+        </button>;
+      })}
+      <div className="longshot-keeper" style={{ left: keeperLeft + '%', top: keeperTop + '%' }}>
+        <i className="keeper-head" /><i className="keeper-body" /><i className="keeper-arm left" /><i className="keeper-arm right" /><i className="keeper-leg left" /><i className="keeper-leg right" />
+      </div>
+      <div className={'longshot-defender zone-' + defenderZone}><i /><b>4</b></div>
+    </div>
+    <div className="longshot-field">
+      <div className="longshot-ball">⚽</div>
+      <div className="longshot-boot"><i /></div>
+      <span>AFUERA DEL ÁREA</span>
     </div>
   </div>;
 }
@@ -246,6 +286,7 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
       const attackingTeam = side === 0 ? a : b;
       const defendingTeam = side === 0 ? b : a;
       const preferred = game === 'freekick' || game === 'cross' || game === 'longshot' ? ['MED', 'DEL'] : ['DEL', 'MED'];
+      const longshotBlocks = game === 'longshot' ? makeDistinctZones(4) : [0, 1];
       return {
         id: i + '-' + game,
         minute: clamp(minuteSets[i] + rand(7) - 3, 4, 89),
@@ -258,6 +299,8 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
         pressureLane: rand(3),
         targetLane: rand(3),
         defensiveLane: rand(3),
+        longshotKeeperZone: longshotBlocks[0],
+        longshotDefenderZone: longshotBlocks[1],
         centers: [18 + rand(65), 18 + rand(65)],
         clutch: round === 2 && i === count - 1
       };
@@ -290,8 +333,7 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
 
   const timingProfile = (m, currentStep) => {
     const profiles = {
-      penal: [{ label: 'PRECISIÓN', width: 25, speed: 2.2 }],
-      longshot: [{ label: 'POTENCIA', width: 23, speed: 2.55 }, { label: 'COLOCACIÓN', width: 14, speed: 3.35 }]
+      penal: [{ label: 'PRECISIÓN', width: 25, speed: 2.2 }]
     };
     const p = (profiles[m.game] || profiles.penal)[currentStep] || profiles.penal[0];
     const skill = skillScale(composure);
@@ -350,7 +392,7 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
     }
   }, [minute, paused, plan]);
 
-  const currentTiming = moment && ['penal', 'longshot'].includes(moment.game) && !(moment.game === 'penal' && !moment.attack)
+  const currentTiming = moment && moment.game === 'penal' && moment.attack
     ? timingProfile(moment, step)
     : null;
 
@@ -390,7 +432,7 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
     const hit = distance <= currentTiming.width / 2;
     const perfect = distance <= currentTiming.width * .16;
     const nextHits = [...timingHits, { hit, perfect }];
-    const totalSteps = moment.game === 'longshot' ? 2 : 1;
+    const totalSteps = 1;
     if (step + 1 < totalSteps) {
       setTimingHits(nextHits);
       setStep(s => s + 1);
@@ -409,13 +451,19 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
       finishMoment(success, success ? '¡GOL DE PENAL!' : clean ? '¡ATAJÓ!' : '¡AFUERA!', success ? 'Dirección y temple perfectos.' : clean ? 'El arquero leyó el remate.' : 'La presión movió el pie.', { lane: selectedLane });
     }
 
-    if (moment.game === 'longshot') {
-      const longEdge = (myMetrics.midfield - rivalMetrics.defense) / 180;
-      const goalChance = clamp(.72 + longEdge - keeperEdge - matchPressure * .08 + perfectCount * .1, .35, .93);
-      const success = clean && Math.random() < goalChance;
-      finishMoment(success, success ? '¡MISIL DE AFUERA!' : clean ? '¡MANOTAZO!' : '¡SE FUE!', success ? 'Le pegaste con todo y al lugar justo.' : clean ? 'El arquero reaccionó a tiempo.' : 'No salió centrado el remate.', { lane: selectedLane });
-    }
 
+  };
+
+  const chooseLongShot = zone => {
+    const blocked = zone === moment.longshotKeeperZone || zone === moment.longshotDefenderZone;
+    finishMoment(
+      !blocked,
+      blocked ? (zone === moment.longshotKeeperZone ? '¡MANOTAZO!' : '¡LO BLOQUEÓ!') : '¡MISIL DE AFUERA!',
+      blocked
+        ? (zone === moment.longshotKeeperZone ? 'Le pegaste justo donde estaba cargado el arquero.' : 'El defensor se cruzó a tiempo.')
+        : 'Viste el hueco y la clavaste desde afuera del área.',
+      { lane: zone < 2 ? zone * 2 : (zone - 2) * 2 }
+    );
   };
 
   const chooseFreeKick = lane => {
@@ -594,24 +642,32 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
         <span><b>{momentum > 0 ? '+' + momentum : momentum}</b> MOMENTO</span>
       </div>
 
-      {['penal', 'longshot'].includes(moment.game) && moment.attack && <>
-        <p>{needsLane ? 'Elegí dónde querés colocar la pelota.' : moment.game === 'longshot' ? 'Primero potencia, después colocación.' : 'Ahora clavá la precisión.'}</p>
+      {moment.game === 'penal' && moment.attack && <>
+        <p>{needsLane ? 'Elegí dónde querés colocar la pelota.' : 'Ahora clavá la precisión.'}</p>
         <GoalStage
           mode={moment.game}
           keeperLane={moment.keeperLane}
           selectedLane={selectedLane}
           onPick={needsLane ? setSelectedLane : null}
-          wall={moment.game === 'longshot'}
           laneLabels={LANES}
         />
         {!needsLane && currentTiming && <>
-          <div className="timing-label">{currentTiming.label} · PASO {step + 1}</div>
+          <div className="timing-label">{currentTiming.label}</div>
           <div className="moment-track">
             <div className="moment-zone goal" style={{ left: ((moment.centers?.[step] ?? 50) - currentTiming.width / 2) + '%', width: currentTiming.width + '%' }} />
             <div className="moment-needle" style={{ left: needle + '%' }} />
           </div>
           <button className="moment-btn moment-stop" onClick={stopTiming}>¡AHORA!</button>
         </>}
+      </>}
+
+      {moment.game === 'longshot' && moment.attack && <>
+        <p>Levantá la cabeza: el arquero cubre una zona y un defensor tapa otra. Te quedan <b>2 huecos limpios</b>.</p>
+        <LongShotChoiceStage
+          keeperZone={moment.longshotKeeperZone}
+          defenderZone={moment.longshotDefenderZone}
+          onPick={chooseLongShot}
+        />
       </>}
 
       {moment.game === 'freekick' && moment.attack && <>
