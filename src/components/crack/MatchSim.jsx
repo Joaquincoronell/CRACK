@@ -179,6 +179,7 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
         pressureLane: rand(3),
         targetLane: rand(3),
         defensiveLane: rand(3),
+        centers: [18 + rand(65), 18 + rand(65)],
         clutch: round === 2 && i === count - 1
       };
     }).sort((x, y) => x.minute - y.minute);
@@ -307,7 +308,8 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
 
   const stopTiming = () => {
     if (!moment || !currentTiming || selectedLane === null) return;
-    const distance = Math.abs(needle - moment.center);
+    const timingCenter = moment.centers?.[step] ?? 50;
+    const distance = Math.abs(needle - timingCenter);
     const hit = distance <= currentTiming.width / 2;
     const perfect = distance <= currentTiming.width * .16;
     const nextHits = [...timingHits, { hit, perfect }];
@@ -514,7 +516,7 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
         {!needsLane && currentTiming && <>
           <div className="timing-label">{currentTiming.label} · PASO {step + 1}</div>
           <div className="moment-track">
-            <div className="moment-zone goal" style={{ left: (moment.center - currentTiming.width / 2) + '%', width: currentTiming.width + '%' }} />
+            <div className="moment-zone goal" style={{ left: ((moment.centers?.[step] ?? 50) - currentTiming.width / 2) + '%', width: currentTiming.width + '%' }} />
             <div className="moment-needle" style={{ left: needle + '%' }} />
           </div>
           <button className="moment-btn moment-stop" onClick={stopTiming}>¡AHORA!</button>
