@@ -102,20 +102,43 @@ const pickScorer = t => {
   for (let i = 0; i < t.scorers.length; i++) { r -= weights[i]; if (r <= 0) return t.scorers[i].name; }
   return t.scorers[t.scorers.length - 1].name;
 };
+const teamProfile = team => {
+  const players = team.players?.length ? team.players : team.scorers || [];
+  const base = team.strength || 80;
+  const avg = list => list.length ? list.reduce((sum, n) => sum + n, 0) / list.length : base;
+  const byPos = pos => players.filter(p => p.position === pos).map(p => p.rating || base);
+  const forwards = byPos('DEL'), mids = byPos('MED'), defs = byPos('DEF'), keepers = byPos('ARQ');
+  return {
+    overall: base,
+    attack: forwards.length ? avg(forwards) : base,
+    midfield: mids.length ? avg(mids) : base,
+    defense: defs.length ? avg(defs) : base,
+    keeper: keepers.length ? Math.max(...keepers) : base - 2
+  };
+};
 export function simulateMatch(a, b, options = {}) {
   const interactive = !!options.interactive;
-  const diff = a.strength - b.strength;
-  const base = interactive ? .72 : 1.3;
-  const divisor = interactive ? 14 : 9;
-  const maxGoals = interactive ? 2.1 : 3.4;
-  const goalsA = poisson(Math.max(.25, Math.min(maxGoals, base + diff / divisor)));
-  const goalsB = poisson(Math.max(.25, Math.min(maxGoals, base - diff / divisor)));
+  const pa = teamProfile(a), pb = teamProfile(b);
+  const overallEdge = (pa.overall - pb.overall) / 26;
+  const attackEdgeA = (pa.attack - pb.defense) / 22;
+  const attackEdgeB = (pb.attack - pa.defense) / 22;
+  const midfieldEdge = (pa.midfield - pb.midfield) / 48;
+  const keeperA = (pa.keeper - 85) / 45;
+  const keeperB = (pb.keeper - 85) / 45;
+  const base = interactive ? .58 : 1.16;
+  const cap = interactive ? 2.05 : 3.25;
+  const lambdaA = Math.max(.22, Math.min(cap, base + overallEdge + attackEdgeA + midfieldEdge - keeperB * .32));
+  const lambdaB = Math.max(.22, Math.min(cap, base - overallEdge + attackEdgeB - midfieldEdge - keeperA * .32));
+  const goalsA = poisson(lambdaA), goalsB = poisson(lambdaB);
   const minutes = shuffle(Array.from({ length: 90 }, (_, i) => i + 1));
   let pens = null;
   if (!interactive && goalsA === goalsB) {
-    let pa, pb;
-    do { pa = 3 + Math.floor(Math.random() * 3); pb = 3 + Math.floor(Math.random() * 3); } while (pa === pb);
-    pens = { a: pa, b: pb };
+    let paScore, pbScore;
+    do {
+      paScore = 3 + Math.floor(Math.random() * 3);
+      pbScore = 3 + Math.floor(Math.random() * 3);
+    } while (paScore === pbScore);
+    pens = { a: paScore, b: pbScore };
   }
   return {
     goalsA,
@@ -124,7 +147,9 @@ export function simulateMatch(a, b, options = {}) {
     eventsB: minutes.slice(goalsA, goalsA + goalsB).sort((x, y) => x - y).map(minute => ({ minute, scorer: pickScorer(b) })),
     pens,
     interactive,
-    round: options.round ?? 0
+    round: options.round ?? 0,
+    profileA: pa,
+    profileB: pb
   };
 }
 export const teamStrength = team => team.squad.length ? team.squad.reduce((sum, p) => sum + byId(p.id).rating, 0) / team.squad.length : 0;
