@@ -1,10 +1,20 @@
 import { useEffect, useReducer, useState } from 'react';
-import { gameReducer, MODES, STORE_KEY } from '@/components/crack/engine';
+import { gameReducer, MODES, STORE_KEY, INITIAL_SKIPS } from '@/components/crack/engine';
 import { CATALOG } from '@/components/crack/catalog';
 import { PHOTOS } from '@/components/crack/photos';
 import { getPhotos, savePhoto, preload } from '@/components/crack/photoStore';
 
-function restore() { try { const data = JSON.parse(localStorage.getItem(STORE_KEY) || sessionStorage.getItem(STORE_KEY) || 'null'); return data?.version === 1 && [2, 3, 4].includes(data.teams?.length) ? { ...data, mode: MODES.includes(data.mode) ? data.mode : 'ciegas', tournament: data.tournament?.teams ? data.tournament : null } : null; } catch { return null; } }
+function restore() {
+  try {
+    const data = JSON.parse(localStorage.getItem(STORE_KEY) || sessionStorage.getItem(STORE_KEY) || 'null');
+    if (!(data?.version === 1 && [2, 3, 4].includes(data.teams?.length))) return null;
+    const teams = data.teams.map(team => ({ ...team, skips: team.skips ?? INITIAL_SKIPS }));
+    const auction = data.auction ? { ...data.auction, openingTurn: data.auction.openingTurn ?? data.auction.turn } : null;
+    return { ...data, teams, auction, mode: MODES.includes(data.mode) ? data.mode : 'ciegas', tournament: data.tournament?.teams ? data.tournament : null };
+  } catch {
+    return null;
+  }
+}
 
 export default function useCrack() {
   const [game, dispatch] = useReducer(gameReducer, null, restore), [home, setHome] = useState(!game), [photos, setPhotos] = useState({}), [loading, setLoading] = useState(true), [saveError, setSaveError] = useState(false), [photoError, setPhotoError] = useState('');
