@@ -120,31 +120,44 @@ function GoalStage({ mode, keeperLane = 1, targetLane = 1, selectedLane = null, 
   </div>;
 }
 
-function LongShotChoiceStage({ keeperZone, defenderZone, onPick }) {
-  const keeperLeft = [26, 74, 26, 74][keeperZone] || 50;
-  const keeperTop = keeperZone < 2 ? 26 : 58;
-  return <div className="longshot-stage">
+function LongShotChoiceStage({ keeperZone, defenderZone, onPick = null, resultZone = null, resultGoal = null }) {
+  const keeperLeft = [25, 75, 25, 75][keeperZone] ?? 50;
+  const keeperTop = keeperZone < 2 ? 27 : 67;
+  const defenderLeft = [25, 75, 25, 75][defenderZone] ?? 50;
+  const defenderTop = defenderZone < 2 ? 27 : 67;
+
+  return <div className={'longshot-stage' + (resultZone !== null ? ' result' : '')}>
     <div className="longshot-goal">
       <div className="goal-net" />
+
       {LONGSHOT_ZONES.map((label, i) => {
         const keeperCovered = i === keeperZone;
         const defenderBlocked = i === defenderZone;
         const open = !keeperCovered && !defenderBlocked;
+        const selected = resultZone === i;
         return <button
           key={label}
           type="button"
-          className={'longshot-zone zone-' + i + (open ? ' open' : keeperCovered ? ' keeper-covered' : ' defender-blocked')}
-          onClick={() => onPick(i)}
+          className={'longshot-zone zone-' + i + (open ? ' open' : keeperCovered ? ' keeper-covered' : ' defender-blocked') + (selected ? ' selected' : '')}
+          onClick={() => onPick?.(i)}
+          disabled={!onPick}
         >
           <span>{open ? '◎' : keeperCovered ? '🧤' : '●'}</span>
           <small>{open ? label : keeperCovered ? 'ARQUERO' : 'DEFENSOR'}</small>
         </button>;
       })}
+
       <div className="longshot-keeper" style={{ left: keeperLeft + '%', top: keeperTop + '%' }}>
         <i className="keeper-head" /><i className="keeper-body" /><i className="keeper-arm left" /><i className="keeper-arm right" /><i className="keeper-leg left" /><i className="keeper-leg right" />
       </div>
-      <div className={'longshot-defender zone-' + defenderZone}><i /><b>4</b></div>
+
+      <div className="longshot-defender" style={{ left: defenderLeft + '%', top: defenderTop + '%' }}>
+        <i /><b>4</b>
+      </div>
+
+      {resultZone !== null && <div className={'longshot-shot-ball ' + (resultGoal ? 'goal' : 'blocked') + ' zone-' + resultZone}>⚽</div>}
     </div>
+
     <div className="longshot-field">
       <div className="longshot-ball">⚽</div>
       <div className="longshot-boot"><i /></div>
@@ -367,7 +380,10 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
       defensive: !moment.attack,
       lane: visual.lane ?? selectedLane ?? moment.targetLane,
       game: moment.game,
-      keeperLane: moment.keeperLane
+      keeperLane: moment.keeperLane,
+      longshotZone: visual.longshotZone ?? null,
+      longshotKeeperZone: moment.longshotKeeperZone,
+      longshotDefenderZone: moment.longshotDefenderZone
     });
     clearMoment();
     setTimeout(() => setFlash(null), 1450);
@@ -462,7 +478,10 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
       blocked
         ? (zone === moment.longshotKeeperZone ? 'Le pegaste justo donde estaba cargado el arquero.' : 'El defensor se cruzó a tiempo.')
         : 'Viste el hueco y la clavaste desde afuera del área.',
-      { lane: zone < 2 ? zone * 2 : (zone - 2) * 2 }
+      {
+        lane: zone % 2 === 0 ? 0 : 2,
+        longshotZone: zone
+      }
     );
   };
 
@@ -761,7 +780,14 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
     {renderMoment()}
 
     {flash && <div className={'sim-flash ' + (flash.goal ? 'goal' : 'save')}>
-      <GoalStage mode={'result-' + flash.game} keeperLane={flash.keeperLane} result={{ goal: flash.goal, lane: flash.lane }} />
+      {flash.game === 'longshot'
+        ? <LongShotChoiceStage
+            keeperZone={flash.longshotKeeperZone}
+            defenderZone={flash.longshotDefenderZone}
+            resultZone={flash.longshotZone}
+            resultGoal={flash.goal}
+          />
+        : <GoalStage mode={'result-' + flash.game} keeperLane={flash.keeperLane} result={{ goal: flash.goal, lane: flash.lane }} />}
       <strong>{flash.headline}</strong>
       <span>{flash.goal && flash.scorer ? 'GOL DE ' + flash.scorer + '. ' + flash.subline : flash.subline}</span>
     </div>}
