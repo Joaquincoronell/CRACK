@@ -136,15 +136,19 @@ export function buildTournament(state) {
       const player = byId(p.id);
       return { name: player.name, rating: player.rating, position: player.position, attributes: player.attributes };
     });
+    const sourceTeam = state.teams[s.index];
     slots[spots[i]] = {
       id: 'p' + s.index,
       name: s.team,
       stars: s.name,
-      strength: teamStrength(state.teams[s.index]),
-      isPlayer: true,
+      strength: teamStrength(sourceTeam),
+      isPlayer: !sourceTeam.bot,
+      isHuman: !sourceTeam.bot,
+      isBot: !!sourceTeam.bot,
+      isAuctionTeam: true,
       scorers: roster,
       players: roster,
-      identity: teamIdentity(state.teams[s.index])
+      identity: teamIdentity(sourceTeam)
     };
   });
   const legends = shuffle(LEGENDS);
@@ -155,7 +159,7 @@ export function buildTournament(state) {
       const position = /Casillas|Barthez|Pumpido/i.test(name) ? 'ARQ' : index < 2 ? 'DEL' : index < 4 ? 'MED' : 'DEF';
       return { name, rating: l.strength, position, attributes: null };
     });
-    slots[i] = { id: 'l' + l.name, name: l.name, stars: l.stars, strength: l.strength, isPlayer: false, scorers: players, players, identity: { style: 'LEYENDA', chemistry: Math.min(99, Math.round(l.strength + 2)), tags: ['HISTORIA', 'JERARQUÍA'] } };
+    slots[i] = { id: 'l' + l.name, name: l.name, stars: l.stars, strength: l.strength, isPlayer: false, isHuman: false, isBot: false, isAuctionTeam: false, scorers: players, players, identity: { style: 'LEYENDA', chemistry: Math.min(99, Math.round(l.strength + 2)), tags: ['HISTORIA', 'JERARQUÍA'] } };
   }
   return { teams: slots, round: 0, results: [], champion: null };
 }
