@@ -503,8 +503,8 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
 
   const resolveRivalPenalty = () => {
     if (!shootout?.active || shootout.done || userShooting || shootFlash) return;
-    // El rival también tiene 4 resultados de gol sobre 6 posibles.
-    const goal = rand(6) < 4;
+    // El remate rival se resuelve al azar: 50% gol, 50% fallo.
+    const goal = Math.random() < .5;
     const zone = rand(6);
     setShootFlash({
       text: goal ? '¡GOL RIVAL!' : '¡LO ERRÓ!',
@@ -616,7 +616,7 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
       </> : shootFlash ? <>
         {shootFlash.playerKick
           ? <ShootoutSixZone selected={shootFlash.zone} badZones={shootFlash.badZones} reveal result={{ goal: shootFlash.goal, zone: shootFlash.zone }} />
-          : <ShootoutSixZone selected={shootFlash.zone} reveal result={{ goal: shootFlash.goal, zone: shootFlash.zone }} />}
+          : <ShootoutSixZone selected={shootFlash.zone} result={{ goal: shootFlash.goal, zone: shootFlash.zone }} />}
         <div className="shootout-flash">{shootFlash.text}</div>
       </> : userShooting ? <>
         <h3>Patea {sideName}</h3>
