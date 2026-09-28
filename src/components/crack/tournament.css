@@ -415,3 +415,13 @@
 .forced-buy-button{border-color:#8a5a3d!important;background:#281b14!important;color:#ffbd8b!important}
 .skip-count b{color:#dec184!important}
 .skip-count em{color:#66735f!important}
+
+
+/* Skill execution layer */
+.skill-execution{max-width:520px;margin:10px auto 0;padding:12px 12px 13px;border:1px solid #425039;border-radius:7px;background:#0f150e;box-shadow:inset 0 0 18px #0007}
+.skill-execution .timing-label{margin-bottom:7px;color:#d7e2d0}
+.skill-execution .moment-track{margin-bottom:11px}
+.fk-lane.selected,.cross-zone.selected{box-shadow:inset 0 0 0 3px #fff,inset 0 0 28px #ffffff16}
+.fk-lane:disabled,.cross-zone:disabled,.pitch-lane:disabled{cursor:default}
+.fk-lane.selected small,.cross-zone.selected>span{color:#fff}
+.pitch-lane.selected{box-shadow:inset 0 0 0 3px #fff}
