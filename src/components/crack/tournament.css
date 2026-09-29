@@ -684,3 +684,172 @@
   .moment-variables{grid-template-columns:repeat(5,minmax(0,1fr))!important}
   .moment-variables span{padding-left:2px!important;padding-right:2px!important}
 }
+
+
+/* CRACK v26 — larger tournament and match UI */
+.tournament{max-width:1020px;margin-top:42px;padding-top:34px}
+.tournament-heading h2{font-size:35px}
+.tournament-heading>p{font-size:13px;max-width:700px}
+.legend-cta{margin-top:22px;padding:22px 25px}
+.legend-cta p{font-size:13px}
+.legend-cta .primary-button{min-height:48px}
+.rival-card{max-width:760px;padding:28px 34px;margin-top:22px}
+.rival-tag{font-size:9px}
+.rival-names{font-size:25px}
+.rival-names em{font-size:13px}
+.rival-stars{font-size:10px}
+.rival-stats strong{font-size:23px}
+.rival-stats small{font-size:8px}
+.difficulty-note,.legend-playing{font-size:11.5px!important}
+
+.tournament-bracket{grid-template-columns:1.4fr 1.1fr .9fr .75fr;gap:14px;padding:20px;margin-top:22px}
+.bracket-round,.bracket-champion{min-width:170px;gap:11px}
+.bracket-round>span,.bracket-champion>span{font-size:8px}
+.bracket-match>div{padding:9px 10px;grid-template-columns:1fr 28px}
+.bracket-match span{font-size:9px}
+.bracket-match b{font-size:12px}
+.bracket-match small{font-size:7px;padding:5px 8px}
+.bracket-champion b{font-size:12px}
+
+.legend-log{margin-top:17px}
+.legend-match{grid-template-columns:100px 1fr 54px 120px;padding:11px 9px;font-size:9.5px}
+.legend-match>span{font-size:8px}
+.legend-match>b{font-size:10px}
+.legend-match>strong{font-size:14px}
+.legend-match>small{font-size:8px}
+
+.match-sim-wrap{max-width:920px;margin-left:auto;margin-right:auto}
+.match-sim{font-size:15px}
+.sim-board{grid-template-columns:1fr 125px 1fr;padding:22px 21px}
+.sim-team strong{font-size:15px}
+.sim-team span{font-size:8px}
+.sim-score b{font-size:32px}
+.sim-score span{font-size:10px}
+.sim-meta{gap:18px;padding:11px 14px;font-size:9px}
+.team-variable-strip span{padding:10px 7px;font-size:8px}
+.team-variable-strip b{font-size:16px}
+
+.sim-moment{padding:27px 28px}
+.sim-moment>p{font-size:12px!important;line-height:1.55;margin:8px auto 18px!important;max-width:720px}
+.moment-title-row{margin-bottom:9px}
+.moment-title-row strong{font-size:25px}
+.moment-kicker{font-size:9px}
+.difficulty-chip{font-size:8px;padding:6px 9px}
+.timing-label{font-size:9px}
+.moment-track{height:19px}
+.moment-btn{font-size:14px!important;padding:12px 38px}
+.moment-stop{min-width:150px}
+
+.moment-variables{gap:7px;margin:10px 0 15px}
+.moment-variables span{padding:9px 6px;font-size:8px}
+.moment-variables b{font-size:14px}
+.skill-impact{font-size:8px;padding:6px 10px;margin-top:8px}
+
+.goal-scene{max-width:590px}
+.choice-btn{min-height:56px;font-size:11px}
+.sim-feed{padding:12px 20px;min-height:160px}
+.sim-event{grid-template-columns:42px 1fr auto;padding:10px 5px}
+.sim-event>b{font-size:10px}
+.sim-event>span{font-size:11px}
+.sim-event>small{font-size:9px}
+.sim-quiet{font-size:11px!important}
+
+.fifa-freekick{max-width:610px}
+.fifa-fk-goal{height:235px}
+.fifa-fk-aim-note{font-size:8px;padding:5px 9px}
+.fk-swipe-pad{height:210px}
+.fk-swipe-guide{font-size:8px;top:13px}
+.fk-power-hint,.fk-curve-hint{font-size:8px}
+.fk-swipe-ball{width:60px;height:60px;font-size:30px}
+
+.counter-runner-game{max-width:610px;padding:14px}
+.counter-runner-head span{font-size:8px}
+.counter-runner-head b{font-size:9px}
+.counter-runner-pitch{height:330px}
+.counter-runner-lane span{font-size:8px}
+.counter-running-ball{font-size:28px}
+.counter-runner-controls{grid-template-columns:120px 1fr 120px}
+.counter-runner-controls button{font-size:9px;padding:11px 8px}
+
+.longshot-aim-stage{max-width:600px}
+.longshot-aim-arena{height:260px}
+.longshot-aim-field>span{font-size:8px}
+.longshot-aim-field>button{font-size:11px;padding:11px 20px}
+.longshot-center-danger span,.longshot-corner-hint{font-size:8px}
+
+.cross-mystery-mark{width:54px;height:54px;font-size:27px}
+.mystery-cross .cross-zone>span{font-size:10px}
+.mystery-cross .cross-zone>small{font-size:8px}
+.skill-execution{max-width:590px;padding:15px}
+.skill-execution .timing-label{font-size:9px}
+
+.match-broadcast-intro{max-width:1020px;padding:32px 30px}
+.broadcast-kicker span{font-size:11px}
+.broadcast-kicker b{font-size:9px}
+.broadcast-stage{grid-template-columns:1fr 120px 1fr;padding:34px 0 27px}
+.broadcast-team>small{font-size:8px}
+.broadcast-team h2{font-size:28px}
+.broadcast-team>strong{font-size:36px}
+.broadcast-team>span{font-size:7px}
+.broadcast-team>div{max-width:220px;padding:11px 12px}
+.broadcast-team>div b{font-size:10px}
+.broadcast-team>div small{font-size:8px}
+.broadcast-vs>span{width:76px;height:76px;font-size:20px}
+.broadcast-vs small{font-size:7px}
+.broadcast-notes{max-width:620px}
+.broadcast-notes span{font-size:8px;padding:10px 6px}
+.broadcast-notes b{font-size:16px}
+
+.post-match-show{max-width:720px!important;padding:28px!important}
+.post-match-kicker{font-size:8px}
+.post-match-show>strong{font-size:23px!important}
+.post-match-scorers span{font-size:9px;padding:7px 10px}
+.post-match-mvp{max-width:320px;padding:13px 15px}
+.post-match-mvp small{font-size:7px}
+.post-match-mvp b{font-size:14px}
+.post-match-mvp span{font-size:8px}
+
+.tournament-stats,.tournament-awards{max-width:940px;margin-top:30px}
+.stat-leaders article{padding:16px}
+.stat-leaders small{font-size:8px}
+.stat-leaders b{font-size:11px}
+.stat-leaders span{font-size:8px}
+.stats-row{min-height:42px;grid-template-columns:minmax(180px,1fr) repeat(5,52px)}
+.stats-row>span strong{font-size:10px}
+.stats-row>span small{font-size:8px}
+.stats-row>b{font-size:10px}
+.stats-head>span,.stats-head>b{font-size:7px!important}
+.awards-grid article{padding:18px 15px;min-height:125px}
+.awards-grid small{font-size:8px}
+.awards-grid b{font-size:12px}
+.awards-grid p{font-size:8px!important}
+
+@media(max-width:720px){
+  .tournament{margin-top:32px;padding-top:28px}
+  .tournament-heading h2{font-size:30px}
+  .tournament-heading>p{font-size:12px}
+  .tournament-bracket{grid-template-columns:repeat(4,175px);padding:14px}
+  .match-sim-wrap{max-width:100%}
+  .sim-board{grid-template-columns:1fr 92px 1fr;padding:17px 12px}
+  .sim-team strong{font-size:12px}
+  .sim-score b{font-size:27px}
+  .sim-meta{font-size:8px;gap:10px}
+  .team-variable-strip span{font-size:7px}
+  .sim-moment{padding:22px 14px}
+  .sim-moment>p{font-size:11px!important}
+  .moment-title-row strong{font-size:21px}
+  .moment-kicker{font-size:8px}
+  .moment-variables{grid-template-columns:repeat(5,minmax(0,1fr))!important}
+  .moment-variables span{font-size:7px}
+  .moment-variables b{font-size:12px}
+  .fifa-fk-goal{height:190px}
+  .fk-swipe-pad{height:185px}
+  .counter-runner-pitch{height:275px}
+  .counter-runner-controls{grid-template-columns:94px 1fr 94px}
+  .longshot-aim-arena{height:215px}
+  .broadcast-team h2{font-size:18px}
+  .broadcast-team>small{font-size:6.5px}
+  .broadcast-team>div b{font-size:8px}
+  .broadcast-team>div small{font-size:7px}
+  .broadcast-vs small{font-size:5.5px}
+}
