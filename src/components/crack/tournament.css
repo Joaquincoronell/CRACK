@@ -628,3 +628,59 @@
   .longshot-aim-arena{height:195px}
   .longshot-aim-arena .longshot-aim-goal{top:12%;height:66%}
 }
+
+
+/* CRACK v25 — broadcast presentation + visible attribute impact */
+.match-broadcast-intro{max-width:900px;margin:26px auto;padding:28px 24px;border:1px solid #3d4936;border-radius:10px;background:
+  radial-gradient(circle at 50% 0,#27331e 0,#161d13 48%,#0d120c 100%);
+  box-shadow:0 22px 60px #0008;overflow:hidden}
+.broadcast-kicker{display:flex;align-items:center;justify-content:space-between;padding-bottom:12px;border-bottom:1px solid #36412f}
+.broadcast-kicker span{font-family:'Arial Black',Impact,system-ui,sans-serif;font-size:9px;letter-spacing:1.5px;color:#c1fa41}
+.broadcast-kicker b{font-size:7px;letter-spacing:1px;color:#dec184}
+.broadcast-stage{display:grid;grid-template-columns:1fr 100px 1fr;gap:18px;align-items:center;padding:30px 0 24px}
+.broadcast-team{text-align:center}
+.broadcast-team>small{display:block;font-size:6px;letter-spacing:1.2px;color:#788570}
+.broadcast-team h2{margin:7px 0 8px;font-family:'Arial Black',Impact,system-ui,sans-serif;font-size:24px;line-height:1;color:#e6ece2;text-transform:uppercase}
+.broadcast-team>strong{display:block;font-family:'Arial Black',Impact,system-ui,sans-serif;font-size:32px;color:#dec184}
+.broadcast-team>span{display:block;margin-top:-3px;font-size:5px;letter-spacing:1px;color:#6e7b67}
+.broadcast-team>div{margin:15px auto 0;max-width:180px;padding:9px 10px;border:1px solid #35412f;border-radius:6px;background:#10150e}
+.broadcast-team>div b{display:block;font-size:8px;color:#c7d3bf}
+.broadcast-team>div small{display:block;margin-top:3px;font-size:6px;color:#778670}
+.broadcast-vs{text-align:center}
+.broadcast-vs>span{display:flex;align-items:center;justify-content:center;width:66px;height:66px;margin:0 auto 8px;border:1px solid #59674d;border-radius:50%;background:#11170f;font-family:'Arial Black',Impact,system-ui,sans-serif;font-size:17px;color:#c1fa41;box-shadow:0 0 22px #c1fa4114}
+.broadcast-vs small{font-size:5px;line-height:1.7;letter-spacing:.75px;color:#7a8972}
+.broadcast-notes{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:0 auto 18px;max-width:520px}
+.broadcast-notes span{padding:8px 5px;border:1px solid #303b2a;border-radius:5px;background:#0e130d;text-align:center;font-size:5px;letter-spacing:.65px;color:#6f7e68}
+.broadcast-notes b{display:block;margin-bottom:2px;font-family:'Arial Black',Impact,system-ui,sans-serif;font-size:13px;color:#d8e1d3}
+.broadcast-start{margin:0 auto!important}
+
+.moment-variables{grid-template-columns:repeat(5,1fr)!important}
+.moment-variables .skill-live{border-color:#536345!important;background:#172014!important}
+.moment-variables .skill-live b{color:#c1fa41!important}
+.skill-impact{display:inline-flex;margin:7px 0 2px;padding:5px 8px;border:1px solid #3b4834;border-radius:999px;background:#11170f;font-size:5px;letter-spacing:.8px;color:#85927d}
+.skill-impact.positive{border-color:#5e7547;color:#c1fa41;background:#182116}
+.skill-impact.negative{border-color:#70483d;color:#f1a48c;background:#241713}
+
+.post-match-show{max-width:620px!important;margin-left:auto!important;margin-right:auto!important;padding:24px!important;border:1px solid #45523d!important;background:
+  radial-gradient(circle at 50% 0,#25301d,#11170f 68%)!important}
+.post-match-kicker{display:block;margin-bottom:8px;font-size:6px;letter-spacing:1.25px;color:#dec184}
+.post-match-show>strong{font-size:19px!important}
+.post-match-scorers{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin:14px 0}
+.post-match-scorers span{padding:6px 8px;border:1px solid #34402e;border-radius:999px;background:#0d120c;font-size:6px;color:#a9b6a2}
+.post-match-scorers b{color:#dec184;margin-right:3px}
+.post-match-mvp{max-width:270px;margin:14px auto;padding:11px 13px;border:1px solid #59694a;border-radius:7px;background:#182116;text-align:center}
+.post-match-mvp small{display:block;font-size:5px;letter-spacing:1px;color:#7d8d74}
+.post-match-mvp b{display:block;margin:4px 0 3px;font-family:'Arial Black',Impact,system-ui,sans-serif;font-size:12px;color:#c1fa41}
+.post-match-mvp span{font-size:6px;color:#97a58f}
+
+@media(max-width:720px){
+  .match-broadcast-intro{margin:12px 8px;padding:20px 14px}
+  .broadcast-stage{grid-template-columns:1fr 58px 1fr;gap:8px;padding:23px 0 18px}
+  .broadcast-team h2{font-size:16px}
+  .broadcast-team>strong{font-size:25px}
+  .broadcast-team>div{padding:7px 5px}
+  .broadcast-vs>span{width:48px;height:48px;font-size:13px}
+  .broadcast-vs small{font-size:4px}
+  .moment-variables{grid-template-columns:repeat(5,minmax(0,1fr))!important}
+  .moment-variables span{padding-left:2px!important;padding-right:2px!important}
+}
