@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Swords, Trophy, RotateCcw, Sparkles } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { nextMatch, pairsForRound, ROUND_NAMES, simulateMatch } from '@/components/crack/engine';
+import { nextMatch, pairsForRound, ROUND_NAMES, simulateMatch, buildMatchStats } from '@/components/crack/engine';
 import MatchSim from '@/components/crack/MatchSim';
+import { playFeedback } from '@/components/crack/feedback';
 
 const randomKnockoutResult = () => {
   const goalsA = Math.floor(Math.random() * 4);
@@ -30,7 +31,11 @@ export default function Tournament({ game, dispatch }) {
     return false;
   };
   const champion = t?.champion ?? null;
-  useEffect(() => { if (isHumanTeam(champion)) confetti({ particleCount: 170, spread: 80, origin: { y: .6 }, colors: ['#c1fa41', '#dec184', '#ffffff'] }); }, [champion?.id]);
+  useEffect(() => {
+    if (!champion) return;
+    playFeedback('champion');
+    if (isHumanTeam(champion)) confetti({ particleCount: 170, spread: 80, origin: { y: .6 }, colors: ['#c1fa41', '#dec184', '#ffffff'] });
+  }, [champion?.id]);
   const pending = !t || champion || sim ? null : nextMatch(t);
   useEffect(() => {
     if (!pending) return;
@@ -42,11 +47,12 @@ export default function Tournament({ game, dispatch }) {
 
     const timer = setTimeout(() => {
       if (humanVsHuman) {
-        dispatch({ type: 'matchResult', ...randomKnockoutResult() });
+        const r = randomKnockoutResult();
+        dispatch({ type: 'matchResult', ...r, stats: buildMatchStats(pending.a, pending.b, r) });
         return;
       }
       const r = simulateMatch(pending.a, pending.b);
-      dispatch({ type: 'matchResult', goalsA: r.goalsA, goalsB: r.goalsB, pensA: r.pens?.a, pensB: r.pens?.b });
+      dispatch({ type: 'matchResult', goalsA: r.goalsA, goalsB: r.goalsB, pensA: r.pens?.a, pensB: r.pens?.b, stats: buildMatchStats(pending.a, pending.b, r) });
     }, 1100);
     return () => clearTimeout(timer);
   }, [pending?.a?.id, pending?.b?.id, dispatch]);
@@ -60,14 +66,43 @@ export default function Tournament({ game, dispatch }) {
   const byId = t ? Object.fromEntries(t.teams.map(x => [x.id, x])) : {};
   const played = t ? t.results.map(r => ({ r, a: byId[r.a], b: byId[r.b] })) : [];
   const upcoming = t && !champion ? pairsForRound(t).filter(([a, b]) => !t.results.some(r => r.round === t.round && r.a === a.id && r.b === b.id)) : [];
+
+  const resultFor = (round, a, b) => t?.results.find(r => r.round === round && r.a === a?.id && r.b === b?.id) || null;
+  const winnerFor = (round, a, b) => {
+    const result = resultFor(round, a, b);
+    return result ? byId[result.winner] : null;
+  };
+  const qfPairs = t ? [[t.teams[0], t.teams[1]], [t.teams[2], t.teams[3]], [t.teams[4], t.teams[5]], [t.teams[6], t.teams[7]]] : [];
+  const qfWinners = qfPairs.map(([a, b]) => winnerFor(0, a, b));
+  const sfPairs = qfWinners.every(Boolean) ? [[qfWinners[0], qfWinners[1]], [qfWinners[2], qfWinners[3]]] : [[qfWinners[0], qfWinners[1]], [qfWinners[2], qfWinners[3]]];
+  const sfWinners = sfPairs.map(([a, b]) => a && b ? winnerFor(1, a, b) : null);
+  const finalPair = [sfWinners[0], sfWinners[1]];
+
+  const renderBracketMatch = (round, pair, key) => {
+    const [aTeam, bTeam] = pair;
+    const result = aTeam && bTeam ? resultFor(round, aTeam, bTeam) : null;
+    const pendingHere = pending && aTeam && bTeam && pending.a.id === aTeam.id && pending.b.id === bTeam.id;
+    return <div key={key} className={'bracket-match' + (pendingHere ? ' current' : '') + (result ? ' played' : '')}>
+      <div><span>{aTeam?.name || 'POR DEFINIR'}</span><b>{result ? result.goalsA : '—'}</b></div>
+      <div><span>{bTeam?.name || 'POR DEFINIR'}</span><b>{result ? result.goalsB : '—'}</b></div>
+      {result?.goalsA === result?.goalsB && <small>PEN. {result.pensA}–{result.pensB}</small>}
+    </div>;
+  };
+
   return <section className="tournament">
     <div className="tournament-heading"><span className="eyebrow gold-text"><Swords size={18} /> TORNEO DE LEYENDAS</span><h2>La copa no se subasta.</h2><p>Ocho equipos a eliminación directa: los recién armados y las leyendas más pesadas de la historia. Cada partido dura 90 minutos, apretados en veinte segundos.</p></div>
+    {t && <div className="tournament-bracket">
+      <div className="bracket-round"><span>CUARTOS</span>{qfPairs.map((pair, i) => renderBracketMatch(0, pair, 'qf' + i))}</div>
+      <div className="bracket-round bracket-semis"><span>SEMIFINAL</span>{sfPairs.map((pair, i) => renderBracketMatch(1, pair, 'sf' + i))}</div>
+      <div className="bracket-round bracket-final"><span>FINAL</span>{renderBracketMatch(2, finalPair, 'final')}</div>
+      <div className="bracket-champion"><span>CAMPEÓN</span><Trophy size={24} /><b>{champion?.name || '—'}</b></div>
+    </div>}
     {!t ? <div className="legend-cta"><p>Tres rondas. Siete partidos. Una copa que casi nadie levanta.</p><button className="primary-button" onClick={() => dispatch({ type: 'startTournament' })}><Swords size={18} />Empezar el torneo</button></div>
       : champion ? <div className={'legend-end ' + (isHumanTeam(champion) ? 'champion' : '')}>{isHumanTeam(champion) ? <Trophy size={30} /> : <Sparkles size={26} />}<h3>{isHumanTeam(champion) ? champion.name + ' campeón del torneo.' : 'Se lo llevó ' + champion.name + '.'}</h3><p>{isHumanTeam(champion) ? 'Le ganó a la historia entera. Contalo, pero que no te crean.' : 'La historia no perdona. La revancha existe y no cuesta nada.'}</p><button className="primary-button" onClick={() => dispatch({ type: 'resetTournament' })}><RotateCcw size={16} />Jugarlo de nuevo</button></div>
       : pending && isHumanTeam(pending.a) && isHumanTeam(pending.b) ? <div className="rival-card"><span className="rival-tag">{ROUND_NAMES[t.round].toUpperCase()}</span><h3 className="rival-names">{pending.a.name} <em>vs</em> {pending.b.name}</h3><p className="legend-playing">Cruce entre dos jugadores reales: el resultado se define al azar…</p></div>
       : pending && mine ? <div className="rival-card"><span className="rival-tag">{ROUND_NAMES[t.round].toUpperCase()}</span><h3 className="rival-names">{pending.a.name} <em>vs</em> {pending.b.name}</h3><p className="rival-stars"><Sparkles size={13} /> {pending.a.stars} · {pending.b.stars}</p><div className="rival-stats"><div><strong>{mine.strength.toFixed(1)}</strong><small>NIVEL {mine.name.toUpperCase()}</small></div><div><strong>{other.strength}</strong><small>NIVEL RIVAL</small></div><div><strong>{chance}%</strong><small>CHANCES</small></div></div><p className="difficulty-note">La dificultad sube con la ronda y con la diferencia de nivel. Tu plantel también modifica la precisión y el tiempo de reacción.</p><button className="primary-button" onClick={() => setSim({ a: pending.a, b: pending.b, script: simulateMatch(pending.a, pending.b, { interactive: true, round: t.round }) })}><Swords size={16} />Jugar el partido</button></div>
       : pending ? <div className="rival-card"><span className="rival-tag">{ROUND_NAMES[t.round].toUpperCase()}</span><h3 className="rival-names">{pending.a.name} <em>vs</em> {pending.b.name}</h3><p className="legend-playing">{isBotTeam(pending.a) || isBotTeam(pending.b) ? 'Botacional juega solo este partido…' : 'Se está jugando en otra cancha…'}</p></div>
       : <div className="rival-card"><p className="legend-playing">Cerrando la ronda…</p></div>}
-    {played.length + upcoming.length > 0 && <div className="legend-log">{played.map(({ r, a, b }, i) => <div key={'r' + i} className={'legend-match ' + (byId[r.winner].isPlayer ? 'win' : a.isPlayer || b.isPlayer ? 'loss' : '')}><span>{ROUND_NAMES[r.round].toUpperCase()}</span><b>{a.name} — {b.name}</b><strong>{r.goalsA}–{r.goalsB}</strong><small>{r.goalsA === r.goalsB ? 'PENALES ' + r.pensA + '–' + r.pensB : 'PASÓ ' + byId[r.winner].name}</small></div>)}{upcoming.map(([a, b], i) => <div key={'u' + i} className="legend-match"><span>{ROUND_NAMES[t.round].toUpperCase()}</span><b>{a.name} — {b.name}</b><strong>VS</strong><small>PRÓXIMO</small></div>)}</div>}
+    {played.length + upcoming.length > 0 && <div className="legend-log">{played.map(({ r, a, b }, i) => <div key={'r' + i} className={'legend-match ' + (isHumanTeam(byId[r.winner]) ? 'win' : isHumanTeam(a) || isHumanTeam(b) ? 'loss' : '')}><span>{ROUND_NAMES[r.round].toUpperCase()}</span><b>{a.name} — {b.name}</b><strong>{r.goalsA}–{r.goalsB}</strong><small>{r.goalsA === r.goalsB ? 'PENALES ' + r.pensA + '–' + r.pensB : 'PASÓ ' + byId[r.winner].name}</small></div>)}{upcoming.map(([a, b], i) => <div key={'u' + i} className="legend-match"><span>{ROUND_NAMES[t.round].toUpperCase()}</span><b>{a.name} — {b.name}</b><strong>VS</strong><small>PRÓXIMO</small></div>)}</div>}
   </section>;
 }
