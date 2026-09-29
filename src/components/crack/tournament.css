@@ -445,3 +445,49 @@
 .longshot-zone:hover:not(:disabled){background:#c1fa410a;box-shadow:inset 0 0 20px #c1fa4114}
 .abandon-game{color:#c58d7d!important;border-color:#6b4036!important}
 .abandon-game:hover{color:#ffc0ae!important;background:#4a211a!important}
+
+
+/* Long-shot aim + two-step counter */
+.longshot-aim-stage{position:relative;max-width:520px;margin:14px auto 8px;padding:22px 18px 0;border:1px solid #3b4934;border-radius:9px;background:radial-gradient(circle at 50% 10%,#2d3828,#171e15 62%,#0d120c);overflow:hidden;box-shadow:inset 0 0 36px #0008}
+.longshot-aim-goal{position:relative;width:92%;height:190px;margin:0 auto;border:4px solid #edf1e9;border-bottom-width:6px;box-shadow:0 8px 22px #0008;overflow:hidden;background:#10150e}
+.longshot-aim-goal .goal-net{position:absolute;inset:0}
+.longshot-center-danger{position:absolute;left:34%;right:34%;top:30%;bottom:0;border:1px dashed #dec18445;background:#dec18408;display:flex;align-items:flex-end;justify-content:center;padding-bottom:8px;z-index:2;pointer-events:none}
+.longshot-center-danger span{font-size:5px;letter-spacing:.9px;color:#b9aa81}
+.longshot-corner-hint{position:absolute;top:8px;font-size:5px;letter-spacing:.8px;color:#c1fa417a;z-index:2;pointer-events:none}
+.longshot-corner-hint.left{left:9px}.longshot-corner-hint.right{right:9px}
+.longshot-aim-keeper{position:absolute;left:50%;bottom:4px;width:38px;height:78px;transform:translateX(-50%);z-index:4;opacity:.9;pointer-events:none}
+.longshot-aim-keeper .keeper-body,.longshot-aim-keeper .keeper-arm,.longshot-aim-keeper .keeper-leg{background:#dec184}
+.longshot-reticle{position:absolute;width:34px;height:34px;border:2px solid #c1fa41;border-radius:50%;transform:translate(-50%,-50%);z-index:8;box-shadow:0 0 0 4px #c1fa4112,0 0 14px #c1fa4155;pointer-events:none}
+.longshot-reticle:before,.longshot-reticle:after{content:'';position:absolute;background:#c1fa41;opacity:.8}
+.longshot-reticle:before{width:42px;height:1px;left:-6px;top:15px}
+.longshot-reticle:after{width:1px;height:42px;left:15px;top:-6px}
+.longshot-reticle i{position:absolute;width:5px;height:5px;border-radius:50%;background:#fff;left:50%;top:50%;transform:translate(-50%,-50%);box-shadow:0 0 6px #fff}
+.longshot-reticle.scored{border-color:#c1fa41}
+.longshot-reticle.stopped{border-color:#dec184;box-shadow:0 0 0 4px #dec18412,0 0 14px #dec18455}
+.longshot-result-ball{position:absolute;transform:translate(-50%,-50%);z-index:10;font-size:19px;filter:drop-shadow(0 2px 4px #000)}
+.longshot-result-ball.goal{animation:aim-ball-goal .45s ease forwards}
+.longshot-result-ball.save{animation:aim-ball-save .55s ease forwards}
+@keyframes aim-ball-goal{from{transform:translate(-50%,80%) scale(1.15)}to{transform:translate(-50%,-50%) scale(.72)}}
+@keyframes aim-ball-save{0%{transform:translate(-50%,80%) scale(1.15)}65%{transform:translate(-50%,-50%) scale(.8)}100%{transform:translate(-20%,20%) scale(.62);opacity:.45}}
+.longshot-aim-field{height:66px;position:relative;margin:0 -18px;background:linear-gradient(#21331b,#2b4422);border-top:1px solid #4a6740;display:flex;align-items:center;justify-content:space-between;padding:0 18px}
+.longshot-aim-field>span{font-size:5px;letter-spacing:.8px;color:#8c9b84}
+.longshot-aim-field>button{border:0;border-radius:4px;background:#c1fa41;color:#17200f;padding:9px 17px;font-family:'Arial Black',Impact,system-ui,sans-serif;font-size:9px;cursor:pointer}
+.longshot-aim-stage.result .longshot-aim-field{justify-content:center}
+
+.counter-sequence{max-width:520px;margin:13px auto 8px;padding:12px;border:1px solid #43513a;border-radius:8px;background:#10150e}
+.counter-sequence-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+.counter-sequence-head span{font-size:6px;letter-spacing:1px;color:#dec184}
+.counter-sequence-head b{font-size:7px;letter-spacing:.7px;color:#c4d0bc}
+.counter-clock{height:7px;border:1px solid #45533d;border-radius:10px;background:#090d08;overflow:hidden;margin-bottom:9px}
+.counter-clock i{display:block;height:100%;background:linear-gradient(90deg,#c1fa41,#dec184);transition:width .04s linear}
+.counter-sequence .mini-pitch{margin-top:0}
+.counter-sequence .pitch-lane{transition:background .1s ease,box-shadow .1s ease}
+.counter-path{display:flex;gap:6px;min-height:20px;margin-top:8px}
+.counter-path span{padding:4px 7px;border:1px solid #34402e;border-radius:4px;background:#151b13;font-size:6px;letter-spacing:.55px;color:#91a087}
+
+@media(max-width:720px){
+  .longshot-aim-goal{height:158px}
+  .longshot-reticle{width:30px;height:30px}
+  .longshot-aim-field{height:58px}
+  .counter-sequence-head{align-items:flex-start;flex-direction:column;gap:3px}
+}
