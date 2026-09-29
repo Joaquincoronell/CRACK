@@ -78,7 +78,8 @@ export function gameReducer(state, action) {
   if (action.type === 'matchResult' && state.tournament && state.phase === 'finished') {
     const t = state.tournament, m = nextMatch(t), { goalsA = 0, goalsB = 0, pensA = 0, pensB = 0 } = action;
     if (!m || goalsA > 12 || goalsB > 12 || goalsA === goalsB && pensA === pensB) return state;
-    const results = [...t.results, { round: t.round, a: m.a.id, b: m.b.id, goalsA, goalsB, pensA, pensB, winner: goalsA > goalsB || goalsA === goalsB && pensA > pensB ? m.a.id : m.b.id }];
+    const resultStats = (action.stats || []).map(stat => ({ ...stat, round: t.round }));
+    const results = [...t.results, { round: t.round, a: m.a.id, b: m.b.id, goalsA, goalsB, pensA, pensB, stats: resultStats, winner: goalsA > goalsB || goalsA === goalsB && pensA > pensB ? m.a.id : m.b.id }];
     const pairs = pairsForRound(t), roundDone = pairs.every(([a, b]) => results.some(r => r.round === t.round && r.a === a.id && r.b === b.id));
     const winners = roundDone ? pairs.map(([a, b]) => results.find(r => r.round === t.round && r.a === a.id && r.b === b.id).winner === a.id ? a : b) : [];
     return { ...state, tournament: { ...t, results, round: roundDone && winners.length > 1 ? t.round + 1 : t.round, champion: roundDone && winners.length === 1 ? winners[0] : t.champion } };
@@ -273,6 +274,47 @@ export function simulateMatch(a, b, options = {}) {
     profileB: pb
   };
 }
+const pickAssistant = (team, scorer) => {
+  const pool = (team.players?.length ? team.players : team.scorers || []).filter(p => p.name !== scorer && p.position !== 'ARQ');
+  if (!pool.length) return null;
+  return pool[Math.floor(Math.random() * pool.length)].name;
+};
+
+const keeperName = team => {
+  const pool = team.players?.length ? team.players : team.scorers || [];
+  return pool.find(p => p.position === 'ARQ')?.name || team.name;
+};
+
+export function buildMatchStats(a, b, result = {}) {
+  const eventsFor = (team, teamId, count, events = []) => {
+    const normalized = events.length
+      ? events
+      : Array.from({ length: count }, (_, i) => ({ minute: 8 + Math.floor(Math.random() * 82), scorer: pickScorer(team), kind: 'openplay' }));
+    const out = [];
+    normalized.forEach(event => {
+      const scorer = event.scorer || pickScorer(team);
+      if (!scorer) return;
+      out.push({ type: 'goal', teamId, player: scorer, minute: event.minute || 0, kind: event.kind || 'openplay', value: 1 });
+      if ((event.kind || 'openplay') !== 'penal' && Math.random() < .72) {
+        const assistant = pickAssistant(team, scorer);
+        if (assistant) out.push({ type: 'assist', teamId, player: assistant, minute: event.minute || 0, kind: event.kind || 'openplay', value: 1 });
+      }
+    });
+    return out;
+  };
+
+  const stats = [
+    ...eventsFor(a, a.id, result.goalsA || 0, result.eventsA || []),
+    ...eventsFor(b, b.id, result.goalsB || 0, result.eventsB || [])
+  ];
+
+  const savesA = 2 + Math.floor(Math.random() * 4) + Math.max(0, (result.goalsB || 0) === 0 ? 1 : 0);
+  const savesB = 2 + Math.floor(Math.random() * 4) + Math.max(0, (result.goalsA || 0) === 0 ? 1 : 0);
+  stats.push({ type: 'save', teamId: a.id, player: keeperName(a), minute: 90, kind: 'keeper', value: savesA });
+  stats.push({ type: 'save', teamId: b.id, player: keeperName(b), minute: 90, kind: 'keeper', value: savesB });
+  return stats;
+}
+
 export const teamStrength = team => team.squad.length ? team.squad.reduce((sum, p) => sum + byId(p.id).rating, 0) / team.squad.length : 0;
 export function botMove(state) {
   const a = state.auction, team = state.teams[a.turn], player = byId(a.id);
