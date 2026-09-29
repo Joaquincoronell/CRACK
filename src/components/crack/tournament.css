@@ -548,3 +548,65 @@
 @media(max-width:480px){
   .awards-grid{grid-template-columns:1fr}
 }
+
+
+/* Skill redesign v22 — swipe free kicks + lane-switch counters */
+.fifa-freekick{max-width:540px;margin:14px auto 8px}
+.fifa-fk-goal{position:relative;height:205px;margin:0 18px;border:4px solid #edf1e9;border-bottom-width:6px;background:radial-gradient(circle at 50% 18%,#283423,#11170f 70%);box-shadow:0 8px 24px #0008;overflow:hidden;touch-action:none;cursor:crosshair}
+.fifa-fk-goal .goal-net{position:absolute;inset:0;pointer-events:none}
+.fifa-fk-wall{position:absolute;left:50%;bottom:0;display:flex;gap:2px;transform:translateX(-50%);z-index:4;pointer-events:none}
+.fifa-fk-wall i{display:block;width:15px;height:60px;border-radius:8px 8px 3px 3px;background:linear-gradient(#8998a8 0 55%,#dde2e6 55%);box-shadow:inset 0 -8px 0 #596675}
+.fifa-fk-wall i:before{content:'';display:block;width:10px;height:10px;margin:-9px auto 0;border-radius:50%;background:#caa68a}
+.fifa-fk-keeper{position:absolute;left:50%;bottom:7px;width:38px;height:78px;transform:translateX(-50%);z-index:3;pointer-events:none}
+.fifa-fk-keeper .keeper-body,.fifa-fk-keeper .keeper-arm,.fifa-fk-keeper .keeper-leg{background:#dec184}
+.fifa-fk-target{position:absolute;width:34px;height:34px;border:2px solid #c1fa41;border-radius:50%;transform:translate(-50%,-50%);z-index:8;pointer-events:none;box-shadow:0 0 0 5px #c1fa4116,0 0 16px #c1fa4166}
+.fifa-fk-target:before,.fifa-fk-target:after{content:'';position:absolute;background:#c1fa41}
+.fifa-fk-target:before{width:42px;height:1px;left:-6px;top:15px}
+.fifa-fk-target:after{width:1px;height:42px;left:15px;top:-6px}
+.fifa-fk-target i{position:absolute;width:5px;height:5px;border-radius:50%;background:#fff;left:50%;top:50%;transform:translate(-50%,-50%)}
+.fifa-fk-aim-note{position:absolute;left:50%;top:8px;transform:translateX(-50%);z-index:7;padding:4px 7px;border-radius:999px;background:#0b100bbb;color:#a8b69e;font-size:5px;letter-spacing:.9px;pointer-events:none}
+
+.fk-swipe-pad{position:relative;height:190px;margin-top:9px;border:1px solid #3e4c36;border-radius:8px;background:linear-gradient(180deg,#10160e,#20331a);overflow:hidden;touch-action:none}
+.fk-swipe-pad:before{content:'';position:absolute;left:50%;top:25px;bottom:30px;border-left:1px dashed #ffffff1f}
+.fk-swipe-pad.ready{border-color:#596d4b}
+.fk-swipe-guide{position:absolute;top:12px;left:0;right:0;text-align:center;font-size:5px;letter-spacing:.8px;color:#7f8e77;pointer-events:none}
+.fk-swipe-line{position:absolute;inset:0;width:100%;height:100%;z-index:4;pointer-events:none}
+.fk-swipe-line line{stroke:#c1fa41;stroke-width:4;stroke-linecap:round;filter:drop-shadow(0 0 4px #c1fa41)}
+.fk-swipe-ball{position:absolute;left:50%;bottom:13px;transform:translateX(-50%);z-index:6;width:54px;height:54px;border-radius:50%;border:1px solid #ffffff4a;background:#0d120c;color:#fff;font-size:27px;cursor:grab;box-shadow:0 5px 14px #0008;touch-action:none;user-select:none}
+.fk-swipe-ball:active:not(:disabled){cursor:grabbing;box-shadow:0 0 0 5px #c1fa4118,0 5px 14px #0008}
+.fk-swipe-ball:disabled{filter:grayscale(1);opacity:.28;cursor:not-allowed}
+.fk-power-hint{position:absolute;left:50%;top:40px;transform:translateX(-50%);font-size:5px;letter-spacing:1px;color:#dec184}
+.fk-curve-hint{position:absolute;bottom:25px;font-size:5px;letter-spacing:.7px;color:#88977f}
+.fk-curve-hint.left{left:16px}.fk-curve-hint.right{right:16px}
+
+.counter-runner-game{max-width:540px;margin:13px auto 8px;padding:11px;border:1px solid #42513a;border-radius:8px;background:#0e140d}
+.counter-runner-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+.counter-runner-head span{font-size:6px;letter-spacing:1px;color:#dec184}
+.counter-runner-head b{font-size:7px;letter-spacing:.7px;color:#c7d3bf}
+.counter-runner-pitch{position:relative;height:300px;border:2px solid #73876b;border-radius:7px;background:repeating-linear-gradient(90deg,#20371d 0 16.66%,#284523 16.66% 33.33%);overflow:hidden}
+.counter-runner-pitch:before,.counter-runner-pitch:after{content:'';position:absolute;top:0;bottom:0;border-left:1px dashed #ffffff30;z-index:1;pointer-events:none}
+.counter-runner-pitch:before{left:33.333%}.counter-runner-pitch:after{left:66.666%}
+.counter-halfway{position:absolute;left:0;right:0;top:50%;border-top:1px solid #ffffff25;pointer-events:none}
+.counter-runner-lane{position:absolute;top:0;bottom:0;width:33.333%;border:0;background:transparent;cursor:pointer;z-index:3}
+.counter-runner-lane.lane-0{left:0}.counter-runner-lane.lane-1{left:33.333%}.counter-runner-lane.lane-2{left:66.666%}
+.counter-runner-lane:hover{background:#c1fa4109}
+.counter-runner-lane.active{background:linear-gradient(180deg,transparent,#c1fa410c)}
+.counter-runner-lane span{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);font-size:5px;letter-spacing:.7px;color:#899782}
+.counter-chasing-defender{position:absolute;width:32px;height:48px;z-index:5;transform:translate(-50%,-50%);transition:top .032s linear;pointer-events:none}
+.counter-chasing-defender.lane-0{left:16.666%}.counter-chasing-defender.lane-1{left:50%}.counter-chasing-defender.lane-2{left:83.333%}
+.counter-chasing-defender i{position:absolute;left:50%;top:0;transform:translateX(-50%);width:13px;height:13px;border-radius:50%;background:#d0a58a}
+.counter-chasing-defender b{position:absolute;left:50%;top:13px;transform:translateX(-50%);display:flex;align-items:center;justify-content:center;width:25px;height:32px;border-radius:5px;background:#b76052;color:#fff;font-family:'Arial Black',Impact,system-ui,sans-serif;font-size:8px;box-shadow:0 3px 8px #0008}
+.counter-running-ball{position:absolute;bottom:36px;z-index:7;font-size:24px;transform:translateX(-50%);transition:left .16s cubic-bezier(.2,.8,.2,1);filter:drop-shadow(0 3px 3px #0008);pointer-events:none}
+.counter-running-ball.lane-0{left:16.666%}.counter-running-ball.lane-1{left:50%}.counter-running-ball.lane-2{left:83.333%}
+.counter-runner-controls{display:grid;grid-template-columns:105px 1fr 105px;align-items:center;gap:8px;margin-top:9px}
+.counter-runner-controls button{border:1px solid #46543e;border-radius:5px;background:#161d14;color:#d6e0d0;padding:9px 7px;font-family:'Arial Black',Impact,system-ui,sans-serif;font-size:7px;cursor:pointer}
+.counter-runner-controls button:disabled{opacity:.25;cursor:default}
+.counter-wave-bar{height:8px;border:1px solid #45543d;border-radius:999px;background:#090d08;overflow:hidden}
+.counter-wave-bar i{display:block;height:100%;background:#c1fa41;transition:width .032s linear}
+
+@media(max-width:720px){
+  .fifa-fk-goal{height:170px;margin:0 5px}
+  .fk-swipe-pad{height:175px}
+  .counter-runner-pitch{height:255px}
+  .counter-runner-controls{grid-template-columns:88px 1fr 88px}
+}
