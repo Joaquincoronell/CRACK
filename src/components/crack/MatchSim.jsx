@@ -172,26 +172,75 @@ function LongShotAimStage({ aimX = 50, aimY = 50, onShoot = null, result = null 
   </div>;
 }
 
-function FreeKickChoiceStage({ blockedLane, onPick, selectedLane = null }) {
-  return <div className="fk-choice-stage">
-    <div className="fk-goal">
+function FreeKickFifaStage({ target, onTarget, onShoot }) {
+  const [drag, setDrag] = useState(null);
+
+  const aim = event => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const x = clamp(((event.clientX - rect.left) / rect.width) * 100, 7, 93);
+    const y = clamp(((event.clientY - rect.top) / rect.height) * 100, 7, 76);
+    onTarget({ x, y });
+  };
+
+  const startSwipe = event => {
+    if (!target) return;
+    const pad = event.currentTarget.closest('.fk-swipe-pad');
+    const rect = pad.getBoundingClientRect();
+    const start = { x: rect.width / 2, y: rect.height - 30 };
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+    setDrag({ start, current: start, rect });
+  };
+
+  const moveSwipe = event => {
+    if (!drag) return;
+    const current = {
+      x: clamp(event.clientX - drag.rect.left, 0, drag.rect.width),
+      y: clamp(event.clientY - drag.rect.top, 0, drag.rect.height)
+    };
+    setDrag(value => value ? { ...value, current } : value);
+  };
+
+  const endSwipe = event => {
+    if (!drag || !target) return;
+    const current = {
+      x: clamp(event.clientX - drag.rect.left, 0, drag.rect.width),
+      y: clamp(event.clientY - drag.rect.top, 0, drag.rect.height)
+    };
+    const dx = current.x - drag.start.x;
+    const up = drag.start.y - current.y;
+    setDrag(null);
+    onShoot({ target, dx, up });
+  };
+
+  return <div className="fifa-freekick">
+    <div className="fifa-fk-goal" onPointerDown={aim}>
       <div className="goal-net" />
-      <div className="fk-keeper">
+      <div className="fifa-fk-wall"><i /><i /><i /><i /></div>
+      <div className="fifa-fk-keeper">
         <i className="keeper-head" /><i className="keeper-body" /><i className="keeper-arm left" /><i className="keeper-arm right" /><i className="keeper-leg left" /><i className="keeper-leg right" />
       </div>
-      {[0, 1, 2].map(i => <button
-        key={i}
-        type="button"
-        className={'fk-lane lane-' + i + (i === blockedLane ? ' blocked' : ' open') + (selectedLane === i ? ' selected' : '')}
-        onClick={() => onPick?.(i)}
-        disabled={!onPick}
-      >
-        {i === blockedLane
-          ? <><span className="fk-wall"><i /><i /><i /></span><small>CERRADO</small></>
-          : <><span className="fk-target">◎</span><small>HUECO</small></>}
-      </button>)}
+      {target && <div className="fifa-fk-target" style={{ left: target.x + '%', top: target.y + '%' }}><i /></div>}
+      <span className="fifa-fk-aim-note">{target ? 'OBJETIVO FIJADO' : 'TOCÁ EL ARCO PARA APUNTAR'}</span>
     </div>
-    <div className="fk-ball-row"><span className="fk-ball">⚽</span><span className="fk-boot" /></div>
+
+    <div className={'fk-swipe-pad' + (target ? ' ready' : '')}>
+      <div className="fk-swipe-guide">ARRASTRÁ LA PELOTA HACIA ARRIBA · EL DESVÍO LATERAL DA ROSCA</div>
+      {drag && <svg className="fk-swipe-line" viewBox={'0 0 ' + drag.rect.width + ' ' + drag.rect.height} preserveAspectRatio="none">
+        <line x1={drag.start.x} y1={drag.start.y} x2={drag.current.x} y2={drag.current.y} />
+      </svg>}
+      <button
+        type="button"
+        className="fk-swipe-ball"
+        disabled={!target}
+        onPointerDown={startSwipe}
+        onPointerMove={moveSwipe}
+        onPointerUp={endSwipe}
+        onPointerCancel={() => setDrag(null)}
+      >⚽</button>
+      <span className="fk-power-hint">POTENCIA</span>
+      <span className="fk-curve-hint left">↖ ROSCA</span>
+      <span className="fk-curve-hint right">ROSCA ↗</span>
+    </div>
   </div>;
 }
 
@@ -228,16 +277,34 @@ function PitchStage({ pressureLane, selectedLane = null, onPick = null }) {
   </div>;
 }
 
-function CounterSequenceStage({ pressureLane, step, clock, onPick, choices = [] }) {
-  return <div className="counter-sequence">
-    <div className="counter-sequence-head">
-      <span>{step === 0 ? '1/2 · SALIDA' : '2/2 · ÚLTIMO PASE'}</span>
-      <b>{step === 0 ? 'ROMPÉ LA PRIMERA PRESIÓN' : 'ENCONTRÁ EL PASE FINAL'}</b>
+function CounterLaneStage({ lane, blockers = [], progress = 0, wave = 0, total = 5, onLane }) {
+  return <div className="counter-runner-game">
+    <div className="counter-runner-head">
+      <span>OLEADA {Math.min(wave + 1, total)}/{total}</span>
+      <b>CAMBIÁ LA PELOTA DE CARRIL</b>
     </div>
-    <div className="counter-clock"><i style={{ width: clock + '%' }} /></div>
-    <PitchStage pressureLane={pressureLane} onPick={onPick} />
-    <div className="counter-path">
-      {choices.map((lane, i) => <span key={i}>{i + 1}. {LANES[lane]}</span>)}
+    <div className="counter-runner-pitch">
+      <div className="counter-halfway" />
+      {[0, 1, 2].map(i => <button
+        type="button"
+        key={i}
+        className={'counter-runner-lane lane-' + i + (lane === i ? ' active' : '')}
+        onClick={() => onLane(i)}
+        aria-label={'Mover a ' + LANES[i]}
+      >
+        <span>{LANES[i]}</span>
+      </button>)}
+      {blockers.map((blockerLane, i) => <div
+        key={blockerLane + '-' + i}
+        className={'counter-chasing-defender lane-' + blockerLane}
+        style={{ top: (8 + progress * .7) + '%' }}
+      ><i /><b>{4 + i}</b></div>)}
+      <div className={'counter-running-ball lane-' + lane}>⚽</div>
+    </div>
+    <div className="counter-runner-controls">
+      <button type="button" onClick={() => onLane(Math.max(0, lane - 1))} disabled={lane === 0}>← CAMBIAR</button>
+      <div className="counter-wave-bar"><i style={{ width: progress + '%' }} /></div>
+      <button type="button" onClick={() => onLane(Math.min(2, lane + 1))} disabled={lane === 2}>CAMBIAR →</button>
     </div>
   </div>;
 }
@@ -300,12 +367,13 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
   const [shootFlash, setShootFlash] = useState(null);
   const [tactic, setTactic] = useState(null);
   const [aimTick, setAimTick] = useState(0);
-  const [counterStep, setCounterStep] = useState(0);
-  const [counterClock, setCounterClock] = useState(100);
-  const [counterChoices, setCounterChoices] = useState([]);
+  const [freeKickTarget, setFreeKickTarget] = useState(null);
+  const [counterLane, setCounterLane] = useState(1);
+  const [counterWave, setCounterWave] = useState(0);
+  const [counterProgress, setCounterProgress] = useState(0);
   const done = useRef([]);
   const reactionTimeout = useRef(null);
-  const counterTimer = useRef(null);
+  const counterLaneRef = useRef(1);
   const statEvents = useRef([]);
 
   const plan = useMemo(() => {
@@ -328,6 +396,9 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
       const preferred = game === 'freekick' || game === 'cross' || game === 'longshot' ? ['MED', 'DEL'] : ['DEL', 'MED'];
       const longshotBlocks = game === 'longshot' ? makeDistinctZones(4) : [0, 1];
       const counterPressures = game === 'counter' ? makeDistinctZones(3) : [0, 1];
+      const counterWaves = game === 'counter'
+        ? Array.from({ length: 5 }, (_, wave) => shuffle([0, 1, 2]).slice(0, wave >= 2 && wave % 2 === 0 ? 2 : 1))
+        : [];
       return {
         id: i + '-' + game,
         minute: clamp(minuteSets[i] + rand(7) - 3, 4, 89),
@@ -339,6 +410,7 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
         keeperLane: rand(3),
         pressureLane: rand(3),
         counterPressureLanes: counterPressures,
+        counterWaves,
         targetLane: rand(3),
         defensiveLane: rand(3),
         longshotKeeperZone: longshotBlocks[0],
@@ -384,7 +456,6 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
   const timingProfile = (m, currentStep) => {
     const profiles = {
       penal: [{ label: 'PRECISIÓN', width: 25, speed: 2.2 }],
-      freekick: [{ label: 'ROSCA', width: 18, speed: 3.25 }],
       cross: [{ label: 'POTENCIA', width: 15, speed: 3.65 }],
       longshot: [{ label: 'CONTACTO', width: 17, speed: 3.45 }]
     };
@@ -402,12 +473,13 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
     setSelectedLane(null);
     setNeedle(0);
     setAimTick(0);
-    setCounterStep(0);
-    setCounterClock(100);
-    setCounterChoices([]);
+    setFreeKickTarget(null);
+    setCounterLane(1);
+    counterLaneRef.current = 1;
+    setCounterWave(0);
+    setCounterProgress(0);
     setReactionCue(false);
     if (reactionTimeout.current) clearTimeout(reactionTimeout.current);
-    if (counterTimer.current) clearInterval(counterTimer.current);
   };
 
   const finishMoment = (success, headline, subline, visual = {}) => {
@@ -472,14 +544,16 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
       setSelectedLane(null);
       setNeedle(0);
       setAimTick(0);
-      setCounterStep(0);
-      setCounterClock(100);
-      setCounterChoices([]);
+      setFreeKickTarget(null);
+      setCounterLane(1);
+      counterLaneRef.current = 1;
+      setCounterWave(0);
+      setCounterProgress(0);
       setMoment(next);
     }
   }, [minute, paused, plan]);
 
-  const currentTiming = moment && ['penal', 'freekick', 'cross'].includes(moment.game) && moment.attack
+  const currentTiming = moment && ['penal', 'cross'].includes(moment.game) && moment.attack
     ? timingProfile(moment, step)
     : null;
 
@@ -504,32 +578,39 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
 
   useEffect(() => {
     if (!moment || moment.game !== 'counter' || !moment.attack) return;
-    if (counterTimer.current) clearInterval(counterTimer.current);
-
-    const duration = clamp(1900 * skillScale(composure) / dynamicDifficulty, 1250, 2250);
+    const waves = moment.counterWaves?.length ? moment.counterWaves : [[moment.pressureLane]];
+    const blockers = waves[counterWave] || waves[waves.length - 1];
+    const duration = clamp((1750 - counterWave * 135) * skillScale(composure) / dynamicDifficulty, 820, 1900);
     const started = Date.now();
-    setCounterClock(100);
+    setCounterProgress(0);
 
-    counterTimer.current = setInterval(() => {
-      const left = clamp(100 - ((Date.now() - started) / duration) * 100, 0, 100);
-      setCounterClock(left);
-      if (left <= 0) {
-        clearInterval(counterTimer.current);
-        counterTimer.current = null;
-        finishMoment(
-          false,
-          counterStep === 0 ? '¡TE COMIERON!' : '¡SE CERRÓ LA CONTRA!',
-          counterStep === 0 ? 'Dudaste en la salida y llegó la presión.' : 'Tardaste demasiado en soltar el último pase.',
-          { lane: moment.counterPressureLanes?.[counterStep] ?? moment.pressureLane }
-        );
+    const timer = setInterval(() => {
+      const progress = clamp(((Date.now() - started) / duration) * 100, 0, 100);
+      setCounterProgress(progress);
+    }, 32);
+
+    const collision = setTimeout(() => {
+      clearInterval(timer);
+      const hit = blockers.includes(counterLaneRef.current);
+      if (hit) {
+        finishMoment(false, '¡TE COMIERON!', 'El defensor llegó al mismo carril que la pelota.', { lane: counterLaneRef.current });
+        return;
       }
-    }, 40);
+
+      if (counterWave >= waves.length - 1) {
+        finishMoment(true, '¡CONTRA LETAL!', 'Fuiste cambiando de carril y dejaste atrás a todos los defensores.', { lane: counterLaneRef.current });
+        return;
+      }
+
+      setCounterWave(w => w + 1);
+      setCounterProgress(0);
+    }, duration);
 
     return () => {
-      if (counterTimer.current) clearInterval(counterTimer.current);
-      counterTimer.current = null;
+      clearInterval(timer);
+      clearTimeout(collision);
     };
-  }, [moment?.id, counterStep]);
+  }, [moment?.id, counterWave]);
 
   useEffect(() => {
     if (!moment || moment.game !== 'save') return;
@@ -571,18 +652,6 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
       const beatsKeeper = selectedLane !== moment.keeperLane || perfectCount > 0;
       const success = clean && beatsKeeper;
       finishMoment(success, success ? '¡GOL DE PENAL!' : clean ? '¡ATAJÓ!' : '¡AFUERA!', success ? 'Dirección y temple perfectos.' : clean ? 'El arquero leyó el remate.' : 'La presión movió el pie.', { lane: selectedLane });
-      return;
-    }
-
-    if (moment.game === 'freekick') {
-      const open = selectedLane !== moment.defensiveLane;
-      const success = clean && open;
-      finishMoment(
-        success,
-        success ? '¡GOLAZO DE TIRO LIBRE!' : open ? '¡SE FUE CERCA!' : '¡A LA BARRERA!',
-        success ? 'Elegiste el hueco y clavaste la rosca.' : open ? 'La lectura fue buena, falló la ejecución.' : 'Le pegaste al sector cerrado.',
-        { lane: selectedLane }
-      );
       return;
     }
 
@@ -630,10 +699,44 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
     );
   };
 
-  const chooseFreeKick = lane => {
-    if (selectedLane !== null) return;
-    setSelectedLane(lane);
-    setNeedle(0);
+  const takeFreeKick = ({ target, dx, up }) => {
+    if (!moment || moment.game !== 'freekick' || !target) return;
+
+    const desiredCurve = target.x < 42 ? -38 : target.x > 58 ? 38 : 0;
+    const powerQuality = clamp(1 - Math.abs(up - 128) / 78, 0, 1);
+    const curveQuality = clamp(1 - Math.abs(dx - desiredCurve) / 78, 0, 1);
+    const leftCorner = Math.hypot(target.x - 16, target.y - 16);
+    const rightCorner = Math.hypot(target.x - 84, target.y - 16);
+    const cornerDistance = Math.min(leftCorner, rightCorner);
+    const placementQuality = clamp(1 - cornerDistance / 62, 0, 1);
+    const centralLow = target.x > 34 && target.x < 66 && target.y > 46;
+    const tooWeak = up < 72;
+    const tooStrong = up > 188;
+    const quality = placementQuality * .48 + powerQuality * .32 + curveQuality * .2;
+    const skillEdge = (composure - 80) * .0025;
+    const required = clamp(.74 + (dynamicDifficulty - 1) * .035 - skillEdge, .68, .82);
+    const success = !centralLow && !tooWeak && !tooStrong && quality >= required;
+    const lane = target.x < 36 ? 0 : target.x > 64 ? 2 : 1;
+
+    let headline = '¡ATAJÓ!';
+    let subline = 'La dirección quedó demasiado cómoda para el arquero.';
+    if (tooWeak || centralLow) {
+      headline = '¡A LA BARRERA!';
+      subline = 'Le faltó altura o apuntaste demasiado al centro.';
+    } else if (tooStrong) {
+      headline = '¡SE FUE ALTA!';
+      subline = 'Te pasaste de potencia en el gesto.';
+    } else if (!success && placementQuality > .62) {
+      headline = '¡ROZÓ EL PALO!';
+      subline = curveQuality < powerQuality ? 'El objetivo era bueno, pero faltó rosca.' : 'La colocación era buena, pero la potencia no quedó fina.';
+    }
+
+    finishMoment(
+      success,
+      success ? '¡LA CLAVASTE!' : headline,
+      success ? 'Objetivo, potencia y rosca: tiro libre perfecto.' : subline,
+      { lane }
+    );
   };
 
   const chooseCross = lane => {
@@ -642,25 +745,10 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
     setNeedle(0);
   };
 
-  const chooseCounterDecision = lane => {
-    if (!moment || moment.game !== 'counter') return;
-    if (counterTimer.current) clearInterval(counterTimer.current);
-    const pressureLane = moment.counterPressureLanes?.[counterStep] ?? moment.pressureLane;
-    if (lane === pressureLane) {
-      finishMoment(false, counterStep === 0 ? '¡TE ENCERRARON!' : '¡CORTARON EL PASE!', counterStep === 0 ? 'Elegiste justo el carril donde saltó la presión.' : 'La defensa leyó el último pase.', { lane });
-      return;
-    }
-
-    const nextChoices = [...counterChoices, lane];
-    if (counterStep === 0) {
-      setCounterChoices(nextChoices);
-      setCounterStep(1);
-      setCounterClock(100);
-      setSelectedLane(null);
-      return;
-    }
-
-    finishMoment(true, '¡CONTRA LETAL!', 'Dos decisiones rápidas, dos espacios bien leídos.', { lane });
+  const moveCounterLane = lane => {
+    const nextLane = clamp(lane, 0, 2);
+    counterLaneRef.current = nextLane;
+    setCounterLane(nextLane);
   };
 
   const chooseOneOnOne = lane => {
@@ -865,13 +953,12 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
       </>}
 
       {moment.game === 'freekick' && moment.attack && <>
-        <p>{selectedLane === null ? <>Leé la barrera: hay <b>2 sectores abiertos</b>. Elegí uno.</> : <>Objetivo elegido. La <b>rosca</b> ahora es mucho más exigente.</>}</p>
-        <FreeKickChoiceStage blockedLane={moment.defensiveLane} selectedLane={selectedLane} onPick={selectedLane === null ? chooseFreeKick : null} />
-        {selectedLane !== null && currentTiming && <div className="skill-execution">
-          <div className="timing-label">{currentTiming.label} · DIF. ALTA</div>
-          <div className="moment-track"><div className="moment-zone goal" style={{ left: ((moment.centers?.[0] ?? 50) - currentTiming.width / 2) + '%', width: currentTiming.width + '%' }} /><div className="moment-needle" style={{ left: needle + '%' }} /></div>
-          <button className="moment-btn moment-stop" onClick={stopTiming}>¡PATEAR!</button>
-        </div>}
+        <p><b>Tiro libre estilo FIFA:</b> primero tocá dónde querés clavarla. Después arrastrá la pelota hacia arriba: la distancia da potencia y el movimiento lateral da rosca.</p>
+        <FreeKickFifaStage
+          target={freeKickTarget}
+          onTarget={setFreeKickTarget}
+          onShoot={takeFreeKick}
+        />
       </>}
 
       {moment.game === 'cross' && moment.attack && <>
@@ -892,15 +979,14 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
       </>}
 
       {moment.game === 'counter' && moment.attack && <>
-        <p>{counterStep === 0
-          ? <>Primera decisión: evitá el carril donde salta la presión. Tenés <b>muy poco tiempo</b>.</>
-          : <>Segunda decisión: la defensa basculó. Encontrá el <b>último pase</b> antes de que cierre.</>}</p>
-        <CounterSequenceStage
-          pressureLane={moment.counterPressureLanes?.[counterStep] ?? moment.pressureLane}
-          step={counterStep}
-          clock={counterClock}
-          choices={counterChoices}
-          onPick={chooseCounterDecision}
+        <p>La pelota arranca por el medio. <b>Cambiala de carril mientras vienen los defensores.</b> Si uno llega a tu carril, perdés la contra. Sobreviví las 5 oleadas.</p>
+        <CounterLaneStage
+          lane={counterLane}
+          blockers={moment.counterWaves?.[counterWave] || [moment.pressureLane]}
+          progress={counterProgress}
+          wave={counterWave}
+          total={moment.counterWaves?.length || 5}
+          onLane={moveCounterLane}
         />
       </>}
 
