@@ -150,15 +150,15 @@ function LongShotAimStage({ aimX = 50, aimY = 50, onShoot = null, result = null 
   const x = result?.x ?? aimX;
   const y = result?.y ?? aimY;
   return <div className={'longshot-aim-stage' + (result ? ' result' : '')}>
-    <div className="longshot-aim-goal">
-      <div className="goal-net" />
-      <div className="longshot-center-danger">
-        <span>ATAJABLE</span>
-      </div>
-      <div className="longshot-corner-hint left">ÁNGULO</div>
-      <div className="longshot-corner-hint right">ÁNGULO</div>
-      <div className="longshot-aim-keeper">
-        <i className="keeper-head" /><i className="keeper-body" /><i className="keeper-arm left" /><i className="keeper-arm right" /><i className="keeper-leg left" /><i className="keeper-leg right" />
+    <div className="longshot-aim-arena">
+      <div className="longshot-aim-goal">
+        <div className="goal-net" />
+        <div className="longshot-center-danger"><span>ATAJABLE</span></div>
+        <div className="longshot-corner-hint left">ÁNGULO</div>
+        <div className="longshot-corner-hint right">ÁNGULO</div>
+        <div className="longshot-aim-keeper">
+          <i className="keeper-head" /><i className="keeper-body" /><i className="keeper-arm left" /><i className="keeper-arm right" /><i className="keeper-leg left" /><i className="keeper-leg right" />
+        </div>
       </div>
       <div className={'longshot-reticle' + (result ? (result.goal ? ' scored' : ' stopped') : '')} style={{ left: x + '%', top: y + '%' }}>
         <i />
@@ -166,7 +166,7 @@ function LongShotAimStage({ aimX = 50, aimY = 50, onShoot = null, result = null 
       {result && <div className={'longshot-result-ball ' + (result.goal ? 'goal' : 'save')} style={{ left: x + '%', top: y + '%' }}>⚽</div>}
     </div>
     <div className="longshot-aim-field">
-      <span>REMATE DE AFUERA · FRENÁ LA MIRA</span>
+      <span>REMATE LEJANO · LA MIRA TAMBIÉN SALE DEL ARCO</span>
       {!result && <button type="button" onClick={onShoot}>¡PEGARLE!</button>}
     </div>
   </div>;
@@ -572,7 +572,7 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
 
   useEffect(() => {
     if (!moment || moment.game !== 'longshot' || !moment.attack) return;
-    const timer = setInterval(() => setAimTick(t => t + 1), 34);
+    const timer = setInterval(() => setAimTick(t => t + 1), 24);
     return () => clearInterval(timer);
   }, [moment?.id]);
 
@@ -676,27 +676,38 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
 
   const shootLongShot = () => {
     if (!moment || moment.game !== 'longshot') return;
-    const x = clamp(50 + 42 * Math.sin(aimTick * .105), 6, 94);
-    const y = clamp(50 + 34 * Math.sin(aimTick * .073 + 1.15), 12, 88);
-    const outer = x < 30 || x > 70;
-    const upper = y < 40;
-    const corner = outer && upper;
-    const distanceFromKeeper = Math.hypot((x - 50) / 50, (y - 60) / 50);
-    const baseChance = corner ? .95 : outer ? .79 : upper ? .68 : .4;
-    const skillBonus = (composure - 80) * .006;
-    const pressurePenalty = (dynamicDifficulty - 1) * .09;
-    const goalChance = clamp(baseChance + skillBonus - pressurePenalty + distanceFromKeeper * .05, .25, .98);
-    const goal = Math.random() < goalChance;
-    const lane = x < 33 ? 0 : x > 67 ? 2 : 1;
+    const x = 50 + 52 * Math.sin(aimTick * .142);
+    const y = 49 + 47 * Math.sin(aimTick * .101 + 1.15);
 
-    finishMoment(
-      goal,
-      goal ? (corner ? '¡AL ÁNGULO!' : '¡GOLAZO DE AFUERA!') : outer ? '¡MANOTAZO!' : '¡AL CUERPO!',
-      goal
-        ? (corner ? 'Frenaste la mira donde no llegaba nadie.' : 'Buen punto de mira y remate limpio.')
-        : outer ? 'El arquero alcanzó a sacarla.' : 'La mira quedó demasiado cerca del arquero.',
-      { lane, longshotAimX: x, longshotAimY: y }
-    );
+    // The goal is only part of the aiming area: from distance it is easy to miss the frame.
+    const inGoal = x >= 13 && x <= 87 && y >= 12 && y <= 78;
+    const goalX = clamp((x - 13) / 74 * 100, 0, 100);
+    const goalY = clamp((y - 12) / 66 * 100, 0, 100);
+    const outer = goalX < 30 || goalX > 70;
+    const upper = goalY < 40;
+    const corner = outer && upper;
+    const distanceFromKeeper = Math.hypot((goalX - 50) / 50, (goalY - 62) / 50);
+    const baseChance = corner ? .86 : outer ? .68 : upper ? .58 : .31;
+    const skillBonus = (composure - 80) * .0045;
+    const pressurePenalty = (dynamicDifficulty - 1) * .1;
+    const goalChance = clamp(baseChance + skillBonus - pressurePenalty + distanceFromKeeper * .04, .18, .92);
+    const goal = inGoal && Math.random() < goalChance;
+    const lane = goalX < 33 ? 0 : goalX > 67 ? 2 : 1;
+
+    let headline;
+    let subline;
+    if (!inGoal) {
+      headline = y < 12 ? '¡SE FUE ALTA!' : x < 13 || x > 87 ? '¡SE FUE ANCHA!' : '¡AFUERA!';
+      subline = 'Desde tan lejos el margen es mínimo: la mira quedó fuera del arco.';
+    } else if (goal) {
+      headline = corner ? '¡AL ÁNGULO!' : '¡GOLAZO DE AFUERA!';
+      subline = corner ? 'La clavaste desde lejísimos.' : 'Entró, pero desde ahí había que ser finísimo.';
+    } else {
+      headline = outer ? '¡MANOTAZO!' : '¡AL CUERPO!';
+      subline = outer ? 'Iba adentro, pero el arquero alcanzó a sacarla.' : 'Entró al arco demasiado cerca del arquero.';
+    }
+
+    finishMoment(goal, headline, subline, { lane, longshotAimX: x, longshotAimY: y });
   };
 
   const takeFreeKick = ({ target, dx, up }) => {
@@ -944,10 +955,10 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
       </>}
 
       {moment.game === 'longshot' && moment.attack && <>
-        <p>La mira se mueve por todo el arco. <b>Frenala lejos del arquero</b>: los ángulos pagan más, el centro es mucho más atajable.</p>
+        <p>Es un remate de muy lejos: la mira va <b>más rápido y también sale del arco</b>. Si frenás afuera, la tirás afuera. Si la dejás adentro pero al medio, el arquero tiene ventaja.</p>
         <LongShotAimStage
-          aimX={clamp(50 + 42 * Math.sin(aimTick * .105), 6, 94)}
-          aimY={clamp(50 + 34 * Math.sin(aimTick * .073 + 1.15), 12, 88)}
+          aimX={50 + 52 * Math.sin(aimTick * .142)}
+          aimY={49 + 47 * Math.sin(aimTick * .101 + 1.15)}
           onShoot={shootLongShot}
         />
       </>}
