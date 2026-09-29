@@ -139,45 +139,28 @@ function GoalStage({ mode, keeperLane = 1, targetLane = 1, selectedLane = null, 
   </div>;
 }
 
-function LongShotChoiceStage({ keeperZone, defenderZone, onPick = null, selectedZone = null, resultZone = null, resultGoal = null }) {
-  const keeperLeft = [25, 75, 25, 75][keeperZone] ?? 50;
-  const keeperTop = keeperZone < 2 ? 27 : 67;
-  const defenderLeft = [25, 75, 25, 75][defenderZone] ?? 50;
-  const defenderTop = defenderZone < 2 ? 27 : 67;
-
-  return <div className={'longshot-stage' + (resultZone !== null ? ' result' : '')}>
-    <div className="longshot-goal">
+function LongShotAimStage({ aimX = 50, aimY = 50, onShoot = null, result = null }) {
+  const x = result?.x ?? aimX;
+  const y = result?.y ?? aimY;
+  return <div className={'longshot-aim-stage' + (result ? ' result' : '')}>
+    <div className="longshot-aim-goal">
       <div className="goal-net" />
-
-      {LONGSHOT_ZONES.map((label, i) => {
-        const selected = selectedZone === i || resultZone === i;
-        return <button
-          key={label}
-          type="button"
-          className={'longshot-zone zone-' + i + (selected ? ' selected' : '')}
-          onClick={() => onPick?.(i)}
-          disabled={!onPick}
-        >
-          <span>{selected ? '◎' : ''}</span>
-          <small>{label}</small>
-        </button>;
-      })}
-
-      <div className="longshot-keeper" style={{ left: keeperLeft + '%', top: keeperTop + '%' }}>
+      <div className="longshot-center-danger">
+        <span>ATAJABLE</span>
+      </div>
+      <div className="longshot-corner-hint left">ÁNGULO</div>
+      <div className="longshot-corner-hint right">ÁNGULO</div>
+      <div className="longshot-aim-keeper">
         <i className="keeper-head" /><i className="keeper-body" /><i className="keeper-arm left" /><i className="keeper-arm right" /><i className="keeper-leg left" /><i className="keeper-leg right" />
       </div>
-
-      <div className="longshot-defender" style={{ left: defenderLeft + '%', top: defenderTop + '%' }}>
-        <i /><b>4</b>
+      <div className={'longshot-reticle' + (result ? (result.goal ? ' scored' : ' stopped') : '')} style={{ left: x + '%', top: y + '%' }}>
+        <i />
       </div>
-
-      {resultZone !== null && <div className={'longshot-shot-ball ' + (resultGoal ? 'goal' : 'blocked') + ' zone-' + resultZone}>⚽</div>}
+      {result && <div className={'longshot-result-ball ' + (result.goal ? 'goal' : 'save')} style={{ left: x + '%', top: y + '%' }}>⚽</div>}
     </div>
-
-    <div className="longshot-field">
-      <div className="longshot-ball">⚽</div>
-      <div className="longshot-boot"><i /></div>
-      <span>AFUERA DEL ÁREA</span>
+    <div className="longshot-aim-field">
+      <span>REMATE DE AFUERA · FRENÁ LA MIRA</span>
+      {!result && <button type="button" onClick={onShoot}>¡PEGARLE!</button>}
     </div>
   </div>;
 }
@@ -238,6 +221,20 @@ function PitchStage({ pressureLane, selectedLane = null, onPick = null }) {
   </div>;
 }
 
+function CounterSequenceStage({ pressureLane, step, clock, onPick, choices = [] }) {
+  return <div className="counter-sequence">
+    <div className="counter-sequence-head">
+      <span>{step === 0 ? '1/2 · SALIDA' : '2/2 · ÚLTIMO PASE'}</span>
+      <b>{step === 0 ? 'ROMPÉ LA PRIMERA PRESIÓN' : 'ENCONTRÁ EL PASE FINAL'}</b>
+    </div>
+    <div className="counter-clock"><i style={{ width: clock + '%' }} /></div>
+    <PitchStage pressureLane={pressureLane} onPick={onPick} />
+    <div className="counter-path">
+      {choices.map((lane, i) => <span key={i}>{i + 1}. {LANES[lane]}</span>)}
+    </div>
+  </div>;
+}
+
 function ShootoutSixZone({ onPick, selected = null, badZones = [], reveal = false, result = null }) {
   return <div className={'six-zone-goal' + (reveal ? ' reveal' : '')}>
     <div className="six-zone-net" />
@@ -295,8 +292,13 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
   const [shootDir, setShootDir] = useState(null);
   const [shootFlash, setShootFlash] = useState(null);
   const [tactic, setTactic] = useState(null);
+  const [aimTick, setAimTick] = useState(0);
+  const [counterStep, setCounterStep] = useState(0);
+  const [counterClock, setCounterClock] = useState(100);
+  const [counterChoices, setCounterChoices] = useState([]);
   const done = useRef([]);
   const reactionTimeout = useRef(null);
+  const counterTimer = useRef(null);
 
   const plan = useMemo(() => {
     const count = round === 0 ? 4 : round === 1 ? 5 : 6;
@@ -317,6 +319,7 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
       const defendingTeam = side === 0 ? b : a;
       const preferred = game === 'freekick' || game === 'cross' || game === 'longshot' ? ['MED', 'DEL'] : ['DEL', 'MED'];
       const longshotBlocks = game === 'longshot' ? makeDistinctZones(4) : [0, 1];
+      const counterPressures = game === 'counter' ? makeDistinctZones(3) : [0, 1];
       return {
         id: i + '-' + game,
         minute: clamp(minuteSets[i] + rand(7) - 3, 4, 89),
@@ -327,6 +330,7 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
         keeper: pickPlayer(defendingTeam, ['ARQ']),
         keeperLane: rand(3),
         pressureLane: rand(3),
+        counterPressureLanes: counterPressures,
         targetLane: rand(3),
         defensiveLane: rand(3),
         longshotKeeperZone: longshotBlocks[0],
@@ -374,8 +378,7 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
       penal: [{ label: 'PRECISIÓN', width: 25, speed: 2.2 }],
       freekick: [{ label: 'ROSCA', width: 18, speed: 3.25 }],
       cross: [{ label: 'POTENCIA', width: 15, speed: 3.65 }],
-      longshot: [{ label: 'CONTACTO', width: 17, speed: 3.45 }],
-      counter: [{ label: 'ÚLTIMO PASE', width: 34, speed: 2.25 }]
+      longshot: [{ label: 'CONTACTO', width: 17, speed: 3.45 }]
     };
     const p = (profiles[m.game] || profiles.penal)[currentStep] || profiles.penal[0];
     const skill = skillScale(composure);
@@ -390,8 +393,13 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
     setTimingHits([]);
     setSelectedLane(null);
     setNeedle(0);
+    setAimTick(0);
+    setCounterStep(0);
+    setCounterClock(100);
+    setCounterChoices([]);
     setReactionCue(false);
     if (reactionTimeout.current) clearTimeout(reactionTimeout.current);
+    if (counterTimer.current) clearInterval(counterTimer.current);
   };
 
   const finishMoment = (success, headline, subline, visual = {}) => {
@@ -412,7 +420,9 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
       keeperLane: moment.keeperLane,
       longshotZone: visual.longshotZone ?? null,
       longshotKeeperZone: moment.longshotKeeperZone,
-      longshotDefenderZone: moment.longshotDefenderZone
+      longshotDefenderZone: moment.longshotDefenderZone,
+      longshotAimX: visual.longshotAimX ?? null,
+      longshotAimY: visual.longshotAimY ?? null
     });
     clearMoment();
     setTimeout(() => setFlash(null), 1450);
@@ -433,11 +443,15 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
       setTimingHits([]);
       setSelectedLane(null);
       setNeedle(0);
+      setAimTick(0);
+      setCounterStep(0);
+      setCounterClock(100);
+      setCounterChoices([]);
       setMoment(next);
     }
   }, [minute, paused, plan]);
 
-  const currentTiming = moment && ['penal', 'freekick', 'cross', 'longshot', 'counter'].includes(moment.game) && moment.attack
+  const currentTiming = moment && ['penal', 'freekick', 'cross'].includes(moment.game) && moment.attack
     ? timingProfile(moment, step)
     : null;
 
@@ -453,6 +467,41 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
     }, 28);
     return () => clearInterval(timer);
   }, [moment?.id, step, currentTiming?.speed, selectedLane]);
+
+  useEffect(() => {
+    if (!moment || moment.game !== 'longshot' || !moment.attack) return;
+    const timer = setInterval(() => setAimTick(t => t + 1), 34);
+    return () => clearInterval(timer);
+  }, [moment?.id]);
+
+  useEffect(() => {
+    if (!moment || moment.game !== 'counter' || !moment.attack) return;
+    if (counterTimer.current) clearInterval(counterTimer.current);
+
+    const duration = clamp(1900 * skillScale(composure) / dynamicDifficulty, 1250, 2250);
+    const started = Date.now();
+    setCounterClock(100);
+
+    counterTimer.current = setInterval(() => {
+      const left = clamp(100 - ((Date.now() - started) / duration) * 100, 0, 100);
+      setCounterClock(left);
+      if (left <= 0) {
+        clearInterval(counterTimer.current);
+        counterTimer.current = null;
+        finishMoment(
+          false,
+          counterStep === 0 ? '¡TE COMIERON!' : '¡SE CERRÓ LA CONTRA!',
+          counterStep === 0 ? 'Dudaste en la salida y llegó la presión.' : 'Tardaste demasiado en soltar el último pase.',
+          { lane: moment.counterPressureLanes?.[counterStep] ?? moment.pressureLane }
+        );
+      }
+    }, 40);
+
+    return () => {
+      if (counterTimer.current) clearInterval(counterTimer.current);
+      counterTimer.current = null;
+    };
+  }, [moment?.id, counterStep]);
 
   useEffect(() => {
     if (!moment || moment.game !== 'save') return;
@@ -526,34 +575,31 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
       return;
     }
 
-    if (moment.game === 'longshot') {
-      const blocked = selectedLane === moment.longshotKeeperZone || selectedLane === moment.longshotDefenderZone;
-      const success = clean && !blocked;
-      finishMoment(
-        success,
-        success ? '¡MISIL DE AFUERA!' : blocked ? (selectedLane === moment.longshotKeeperZone ? '¡MANOTAZO!' : '¡LO BLOQUEÓ!') : '¡SE FUE CERCA!',
-        success ? 'Encontraste el hueco y conectaste limpio.' : blocked ? 'Elegiste una zona tapada.' : 'El hueco estaba, pero el contacto no fue bueno.',
-        { lane: selectedLane % 2 === 0 ? 0 : 2, longshotZone: selectedLane }
-      );
-      return;
-    }
-
-    if (moment.game === 'counter') {
-      const open = selectedLane !== moment.pressureLane;
-      const success = clean && open;
-      finishMoment(
-        success,
-        success ? '¡CONTRA LETAL!' : open ? '¡MAL ÚLTIMO PASE!' : '¡TE ENCERRARON!',
-        success ? 'Leíste el espacio y soltaste el pase justo.' : open ? 'Había espacio, pero la ejecución llegó tarde.' : 'Atacaste justo donde se cerró la defensa.',
-        { lane: selectedLane }
-      );
-    }
   };
 
-  const chooseLongShot = zone => {
-    if (selectedLane !== null) return;
-    setSelectedLane(zone);
-    setNeedle(0);
+  const shootLongShot = () => {
+    if (!moment || moment.game !== 'longshot') return;
+    const x = clamp(50 + 42 * Math.sin(aimTick * .105), 6, 94);
+    const y = clamp(50 + 34 * Math.sin(aimTick * .073 + 1.15), 12, 88);
+    const outer = x < 30 || x > 70;
+    const upper = y < 40;
+    const corner = outer && upper;
+    const distanceFromKeeper = Math.hypot((x - 50) / 50, (y - 60) / 50);
+    const baseChance = corner ? .95 : outer ? .79 : upper ? .68 : .4;
+    const skillBonus = (composure - 80) * .006;
+    const pressurePenalty = (dynamicDifficulty - 1) * .09;
+    const goalChance = clamp(baseChance + skillBonus - pressurePenalty + distanceFromKeeper * .05, .25, .98);
+    const goal = Math.random() < goalChance;
+    const lane = x < 33 ? 0 : x > 67 ? 2 : 1;
+
+    finishMoment(
+      goal,
+      goal ? (corner ? '¡AL ÁNGULO!' : '¡GOLAZO DE AFUERA!') : outer ? '¡MANOTAZO!' : '¡AL CUERPO!',
+      goal
+        ? (corner ? 'Frenaste la mira donde no llegaba nadie.' : 'Buen punto de mira y remate limpio.')
+        : outer ? 'El arquero alcanzó a sacarla.' : 'La mira quedó demasiado cerca del arquero.',
+      { lane, longshotAimX: x, longshotAimY: y }
+    );
   };
 
   const chooseFreeKick = lane => {
@@ -568,10 +614,25 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
     setNeedle(0);
   };
 
-  const chooseCounter = lane => {
-    if (selectedLane !== null) return;
-    setSelectedLane(lane);
-    setNeedle(0);
+  const chooseCounterDecision = lane => {
+    if (!moment || moment.game !== 'counter') return;
+    if (counterTimer.current) clearInterval(counterTimer.current);
+    const pressureLane = moment.counterPressureLanes?.[counterStep] ?? moment.pressureLane;
+    if (lane === pressureLane) {
+      finishMoment(false, counterStep === 0 ? '¡TE ENCERRARON!' : '¡CORTARON EL PASE!', counterStep === 0 ? 'Elegiste justo el carril donde saltó la presión.' : 'La defensa leyó el último pase.', { lane });
+      return;
+    }
+
+    const nextChoices = [...counterChoices, lane];
+    if (counterStep === 0) {
+      setCounterChoices(nextChoices);
+      setCounterStep(1);
+      setCounterClock(100);
+      setSelectedLane(null);
+      return;
+    }
+
+    finishMoment(true, '¡CONTRA LETAL!', 'Dos decisiones rápidas, dos espacios bien leídos.', { lane });
   };
 
   const chooseOneOnOne = lane => {
@@ -747,20 +808,12 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
       </>}
 
       {moment.game === 'longshot' && moment.attack && <>
-        <p>{selectedLane === null
-          ? <>Leé la posición del <b>arquero y del defensor</b>. No te marco el hueco: elegí uno de los 4 sectores.</>
-          : <>Sector elegido. Ahora clavá el <b>contacto</b> · dificultad 8/10.</>}</p>
-        <LongShotChoiceStage
-          keeperZone={moment.longshotKeeperZone}
-          defenderZone={moment.longshotDefenderZone}
-          selectedZone={selectedLane}
-          onPick={selectedLane === null ? chooseLongShot : null}
+        <p>La mira se mueve por todo el arco. <b>Frenala lejos del arquero</b>: los ángulos pagan más, el centro es mucho más atajable.</p>
+        <LongShotAimStage
+          aimX={clamp(50 + 42 * Math.sin(aimTick * .105), 6, 94)}
+          aimY={clamp(50 + 34 * Math.sin(aimTick * .073 + 1.15), 12, 88)}
+          onShoot={shootLongShot}
         />
-        {selectedLane !== null && currentTiming && <div className="skill-execution hard-execution">
-          <div className="timing-label">{currentTiming.label} · DIF. 8/10</div>
-          <div className="moment-track"><div className="moment-zone goal" style={{ left: ((moment.centers?.[0] ?? 50) - currentTiming.width / 2) + '%', width: currentTiming.width + '%' }} /><div className="moment-needle" style={{ left: needle + '%' }} /></div>
-          <button className="moment-btn moment-stop" onClick={stopTiming}>¡PEGARLE!</button>
-        </div>}
       </>}
 
       {moment.game === 'freekick' && moment.attack && <>
@@ -791,13 +844,16 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
       </>}
 
       {moment.game === 'counter' && moment.attack && <>
-        <p>{selectedLane === null ? <>La defensa se cargó hacia un sector. Encontrá el <b>espacio libre</b>.</> : <>Carril elegido. Falta soltar el <b>último pase</b>.</>}</p>
-        <PitchStage pressureLane={moment.pressureLane} selectedLane={selectedLane} onPick={selectedLane === null ? chooseCounter : null} />
-        {selectedLane !== null && currentTiming && <div className="skill-execution">
-          <div className="timing-label">{currentTiming.label}</div>
-          <div className="moment-track"><div className="moment-zone goal" style={{ left: ((moment.centers?.[0] ?? 50) - currentTiming.width / 2) + '%', width: currentTiming.width + '%' }} /><div className="moment-needle" style={{ left: needle + '%' }} /></div>
-          <button className="moment-btn moment-stop" onClick={stopTiming}>¡FILTRAR!</button>
-        </div>}
+        <p>{counterStep === 0
+          ? <>Primera decisión: evitá el carril donde salta la presión. Tenés <b>muy poco tiempo</b>.</>
+          : <>Segunda decisión: la defensa basculó. Encontrá el <b>último pase</b> antes de que cierre.</>}</p>
+        <CounterSequenceStage
+          pressureLane={moment.counterPressureLanes?.[counterStep] ?? moment.pressureLane}
+          step={counterStep}
+          clock={counterClock}
+          choices={counterChoices}
+          onPick={chooseCounterDecision}
+        />
       </>}
 
       {moment.game === 'save' && <>
@@ -884,12 +940,7 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
 
     {flash && <div className={'sim-flash ' + (flash.goal ? 'goal' : 'save')}>
       {flash.game === 'longshot'
-        ? <LongShotChoiceStage
-            keeperZone={flash.longshotKeeperZone}
-            defenderZone={flash.longshotDefenderZone}
-            resultZone={flash.longshotZone}
-            resultGoal={flash.goal}
-          />
+        ? <LongShotAimStage result={{ goal: flash.goal, x: flash.longshotAimX ?? 50, y: flash.longshotAimY ?? 50 }} />
         : <GoalStage mode={'result-' + flash.game} keeperLane={flash.keeperLane} result={{ goal: flash.goal, lane: flash.lane }} />}
       <strong>{flash.headline}</strong>
       <span>{flash.goal && flash.scorer ? 'GOL DE ' + flash.scorer + '. ' + flash.subline : flash.subline}</span>
