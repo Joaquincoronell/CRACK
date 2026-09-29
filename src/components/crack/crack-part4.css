@@ -2,3 +2,120 @@
 @media(max-width:800px){.game-header{height:76px;padding:0 18px}.wordmark{font-size:27px!important}.header-caption{display:none}.game-header nav{gap:16px}.header-local{display:none}.welcome{padding:28px 18px 20px}.welcome-grid{grid-template-columns:1fr}.intro-stage{min-height:360px}.intro h1{font-size:44px}.showcase-wrap{right:12%;top:145px}.intro-stats{margin-top:20px}.setup-panel{padding:22px}.rules{grid-template-columns:1fr;gap:18px}.rule{border-top:1px solid #252d21;padding-top:14px}.welcome-footer{flex-direction:column}.auction-page{padding:22px 18px 40px}.auction-layout{grid-template-columns:1fr;gap:38px}.auction-controls,.reveal-info{max-width:500px;width:100%;margin:auto}.teams-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.final-teams{grid-template-columns:1fr}.pitch{height:450px}.results-page{padding:38px 18px 60px}.results-heading h1{font-size:34px}.standing-row{grid-template-columns:33px 34px 1fr 60px 66px}.mode-options{grid-template-columns:1fr 1fr}.mode-options button:last-child{grid-column:1/-1}.way-options button:last-child{grid-column:auto}.crack-modal{padding:22px!important}}
 @media(max-width:580px){.game-header{gap:12px}.header-divider{display:none}.header-link>span{display:none}.save-status{font-size:0}.save-status svg{display:block}.intro h1{font-size:36px}.intro-stage{min-height:335px}.showcase-wrap{right:2px;top:170px;width:153px}.player-card.showcase{width:153px;height:210px}.showcase .portrait-wrap{height:127px}.showcase .mystery-mark{top:75px;font-size:47px}.showcase .card-bottom{bottom:30px}.showcase .card-bottom h2{font-size:8px}.showcase .floating-tag{display:none}.floating-tag{right:-5px;font-size:7px}.intro-description{font-size:13px;max-width:185px}.intro-stats>div{padding-left:10px}.intro-stats strong{font-size:23px}.setup-panel{padding:18px 14px}.participant-options button{font-size:9px}.mode-options,.way-options{grid-template-columns:1fr}.mode-options button:last-child{grid-column:auto}.player-input-row{grid-template-columns:25px 1fr}.player-input-row>div:last-child{grid-column:2}.team-dot{width:26px}.auction-layout{margin-top:25px}.round-strip>span:last-child{display:none}.player-card{width:270px;height:377px}.auction-position{width:270px}.auction-controls h1,.reveal-info h1{font-size:28px}.current-bid strong{font-size:35px}.teams-heading>span{display:none}.teams-grid{grid-template-columns:1fr}.results-heading h1{font-size:28px}.standing-row{grid-template-columns:28px 29px 1fr 49px}.standing-row>div:last-child{display:none}.pitch{height:420px;padding-left:5px;padding-right:5px}.pitch-player{width:58px}.photo-row{grid-template-columns:40px 1fr}.upload-button{grid-column:2;justify-self:start}.crack-modal{padding:18px!important}}
 @media(prefers-reduced-motion:reduce){.crack-app *{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+
+
+/* CRACK v26 — readability, scale and tighter use of space */
+.crack-app{font-size:16.5px}
+.crack-app .eyebrow{font-size:11px;letter-spacing:1.45px}
+.game-header{max-width:1440px;height:98px;padding-left:34px;padding-right:34px}
+.header-caption{font-size:10.5px}
+.header-local{font-size:10px}
+.header-link{font-size:13px!important}
+.save-status{font-size:12px}
+
+.welcome{max-width:1440px;padding-top:38px}
+.welcome-grid{grid-template-columns:minmax(0,1.25fr) minmax(420px,.95fr);gap:38px}
+.intro-stage{min-height:350px}
+.intro h1{font-size:clamp(40px,4.2vw,62px);line-height:1.06}
+.intro-description{font-size:16px;max-width:310px;line-height:1.65!important;margin-top:22px!important}
+.intro-stats{margin-top:30px}
+.intro-stats strong{font-size:31px}
+.intro-stats>div>span{font-size:9.5px}
+.setup-panel{padding:29px 30px 24px}
+.setup-panel h2{font-size:28px}
+.setup-panel>.muted{font-size:14px}
+.field-label,.setup-panel form>.field-label{font-size:10px}
+.participant-options button{font-size:11px;padding:13px 6px}
+.mode-options button strong{font-size:11.5px}
+.mode-options button small{font-size:9.5px;line-height:1.45}
+.player-input-row label{font-size:9.5px}
+.player-input-row input{font-size:13px;padding:11px 10px}
+.setup-foot,.photo-warning,.accept-missing{font-size:11px}
+.rules-strip{margin-top:34px}
+.rule .eyebrow{font-size:9px}
+.rule h3{font-size:14px}
+.rule p{font-size:12px}
+.welcome-footer{font-size:10px}
+
+.auction-page{max-width:1320px;padding-top:24px}
+.round-strip{font-size:10.5px}
+.round-notice{font-size:13px}
+.auction-layout{grid-template-columns:minmax(360px,.92fr) minmax(470px,1.08fr);gap:42px;max-width:1130px;margin-top:30px}
+.player-card{width:320px;height:440px}
+.auction-position{width:320px;font-size:11px}
+.card-caption{font-size:11px}
+.auction-controls h1,.reveal-info h1{font-size:36px}
+.auction-controls>.muted{font-size:14px}
+.current-bid{margin:19px 0;padding:17px 0}
+.current-bid strong{font-size:45px}
+.current-bid strong>small{font-size:23px}
+.bid-owner{font-size:13px}
+.bid-owner small{font-size:11px}
+.turn-box{padding:22px}
+.turn-heading>div>span{font-size:9px}
+.turn-heading h2{font-size:19px}
+.turn-team{font-size:11px}
+.bid-buttons>button{padding:14px 5px}
+.bid-buttons>button>span{font-size:23px}
+.bid-buttons>button>small{font-size:10px}
+.pass-button{font-size:13px!important;padding:13px}
+.reserve-note{font-size:10.5px}
+.auction-note{font-size:11px}
+.teams-heading h2{font-size:18px}
+.teams-heading>span{font-size:9px}
+
+.team-panel-top{padding:15px}
+.team-name h3{font-size:13px}
+.team-name span{font-size:9.5px}
+.team-budget{font-size:20px}
+.team-budget small{font-size:7px}
+.team-status,.position-counts{font-size:8.5px;padding-top:9px;padding-bottom:9px}
+.squad-list>div{font-size:9.5px;padding:7px 0}
+.squad-list small{font-size:7.5px}
+.squad-list>p{font-size:9.5px}
+.reveal-info .reveal-name{font-size:23px}
+.reveal-info blockquote{font-size:13px}
+.purchase-detail span{font-size:8.5px}
+.purchase-detail strong{font-size:18px}
+.purchase-detail small{font-size:10px}
+
+.results-page{max-width:1240px;padding-top:42px}
+.results-heading h1{font-size:46px}
+.results-heading>p{font-size:14px}
+.standings{max-width:850px;margin-top:28px}
+.standing-row{padding:16px 13px}
+.standing-team h2{font-size:15px}
+.standing-team span{font-size:10px}
+.standing-row>div>strong{font-size:16px}
+.standing-row>div>small{font-size:8px}
+.results-disclaimer{max-width:850px;font-size:10px}
+.final-teams{gap:30px;margin-top:42px}
+.final-team-heading h2{font-size:18px}
+.final-team-heading span{font-size:9.5px}
+
+@media(max-width:800px){
+  .crack-app{font-size:16px}
+  .game-header{height:80px}
+  .welcome-grid{grid-template-columns:1fr}
+  .intro-description{font-size:15px;max-width:260px}
+  .auction-layout{grid-template-columns:1fr;max-width:620px}
+  .player-card{width:300px;height:414px}
+  .auction-position{width:300px}
+  .auction-controls h1,.reveal-info h1{font-size:32px}
+  .results-heading h1{font-size:38px}
+}
+@media(max-width:580px){
+  .crack-app{font-size:15.5px}
+  .game-header{padding-left:14px;padding-right:14px}
+  .intro h1{font-size:38px}
+  .intro-description{font-size:14px;max-width:215px}
+  .setup-panel{padding:20px 16px}
+  .participant-options button{font-size:10px}
+  .mode-options button strong{font-size:11px}
+  .mode-options button small{font-size:9px}
+  .player-input-row input{font-size:13px}
+  .player-card{width:282px;height:394px}
+  .auction-position{width:282px}
+  .auction-controls h1,.reveal-info h1{font-size:30px}
+  .results-heading h1{font-size:31px}
+}
