@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Clock, Swords, Shield, Target, Zap, Gauge, Activity } from 'lucide-react';
 import { playerSkill } from '@/components/crack/catalog';
+import { playFeedback } from '@/components/crack/feedback';
 
 const PHRASES = ['¡GOLAZO!', '¡De penal!', '¡Golpe de efecto!', '¡Qué definición!', '¡De cabeza al ángulo!', '¡Contragolpe letal!', '¡Zurdazo imposible!', '¡La picó por encima del arquero!', '¡Palomita!', '¡La rompió al palo izquierdo!'];
 const LANES = ['IZQUIERDA', 'CENTRO', 'DERECHA'];
@@ -103,6 +104,12 @@ const pickPlayer = (team, preferred = []) => {
 };
 
 const pickScorer = team => pickPlayer(team, ['DEL', 'MED']).name;
+const pickAssistant = (team, scorer) => {
+  const all = team.players?.length ? team.players : team.scorers || [];
+  const pool = all.filter(p => p.name !== scorer && p.position !== 'ARQ');
+  if (!pool.length) return null;
+  return pool[Math.floor(Math.random() * pool.length)].name;
+};
 const skillScale = rating => clamp(.8 + ((rating || 80) - 68) * .013, .78, 1.24);
 
 const matchDifficulty = (a, b, userSide, round) => {
@@ -299,6 +306,7 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
   const done = useRef([]);
   const reactionTimeout = useRef(null);
   const counterTimer = useRef(null);
+  const statEvents = useRef([]);
 
   const plan = useMemo(() => {
     const count = round === 0 ? 4 : round === 1 ? 5 : 6;
@@ -406,14 +414,34 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
     if (!moment) return;
     const goal = moment.attack ? success : !success;
     const attackingTeam = moment.side === 0 ? a : b;
-    const scorer = goal ? pickScorer(attackingTeam) : null;
+    const defendingTeam = moment.side === 0 ? b : a;
+    const scorer = goal
+      ? (moment.attack && moment.player?.name ? moment.player.name : pickScorer(attackingTeam))
+      : null;
+    const assist = goal && moment.attack && ['cross', 'counter'].includes(moment.game)
+      ? pickAssistant(attackingTeam, scorer)
+      : null;
+
+    if (goal && scorer) {
+      statEvents.current.push({ type: 'goal', teamId: attackingTeam.id, player: scorer, minute, kind: moment.game, value: 1 });
+      if (assist) statEvents.current.push({ type: 'assist', teamId: attackingTeam.id, player: assist, minute, kind: moment.game, value: 1 });
+    }
+    if (!moment.attack && success && moment.keeper?.name) {
+      statEvents.current.push({ type: 'save', teamId: defendingTeam.id, player: moment.keeper.name, minute, kind: moment.game, value: 1 });
+    }
+    if (moment.attack && !success && moment.keeper?.name && /ATAJ|MANOTAZO|GIGANTE|AL CUERPO/i.test(headline)) {
+      statEvents.current.push({ type: 'save', teamId: defendingTeam.id, player: moment.keeper.name, minute, kind: moment.game, value: 1 });
+    }
+
+    playFeedback(goal ? 'goal' : (!moment.attack && success) ? 'save' : 'miss');
     setMomentum(m => clamp(m + (success ? 1 : -1), -3, 3));
-    setLog(l => [...l, { m: minute, side: moment.side, goal, scorer, kind: moment.game, label: headline }]);
+    setLog(l => [...l, { m: minute, side: moment.side, goal, scorer, assist, kind: moment.game, label: headline }]);
     setFlash({
       goal,
       headline,
       subline,
       scorer,
+      assist,
       defensive: !moment.attack,
       lane: visual.lane ?? selectedLane ?? moment.targetLane,
       game: moment.game,
@@ -756,11 +784,31 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
   }, [shootout?.turn, shootout?.active, shootout?.done, userShooting, shootFlash]);
 
   const finish = () => {
+    const scripted = [
+      ...script.eventsA.map(event => ({
+        type: 'goal',
+        teamId: a.id,
+        player: event.scorer,
+        minute: event.minute,
+        kind: event.kind || 'openplay',
+        value: 1
+      })),
+      ...script.eventsB.map(event => ({
+        type: 'goal',
+        teamId: b.id,
+        player: event.scorer,
+        minute: event.minute,
+        kind: event.kind || 'openplay',
+        value: 1
+      }))
+    ].filter(event => event.player);
+
     onFinish({
       goalsA,
       goalsB,
       pensA: shootout?.done ? shootout.a : undefined,
-      pensB: shootout?.done ? shootout.b : undefined
+      pensB: shootout?.done ? shootout.b : undefined,
+      stats: [...scripted, ...statEvents.current]
     });
   };
 
@@ -943,7 +991,7 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
         ? <LongShotAimStage result={{ goal: flash.goal, x: flash.longshotAimX ?? 50, y: flash.longshotAimY ?? 50 }} />
         : <GoalStage mode={'result-' + flash.game} keeperLane={flash.keeperLane} result={{ goal: flash.goal, lane: flash.lane }} />}
       <strong>{flash.headline}</strong>
-      <span>{flash.goal && flash.scorer ? 'GOL DE ' + flash.scorer + '. ' + flash.subline : flash.subline}</span>
+      <span>{flash.goal && flash.scorer ? 'GOL DE ' + flash.scorer + (flash.assist ? ' · ASISTENCIA ' + flash.assist : '') + '. ' + flash.subline : flash.subline}</span>
     </div>}
 
     {!shootout?.active && <div className="sim-feed">
