@@ -17,6 +17,15 @@ const GAME_LABELS = {
   counter: 'CONTRAATAQUE',
   longshot: 'REMATE DE AFUERA'
 };
+const GAME_SKILL_LABELS = {
+  penal: 'FIN + TEC',
+  freekick: 'BAL + TEC',
+  oneonone: 'FIN + VEL',
+  save: 'ARQ',
+  cross: 'PAS + TEC',
+  counter: 'VEL + PAS',
+  longshot: 'FIN + TEC'
+};
 const ROUND_NAMES = ['CUARTOS', 'SEMIFINAL', 'FINAL'];
 const SURFACES = [
   { name: 'SECO', control: 1.05, speed: 1, bounce: .98 },
@@ -112,6 +121,12 @@ const pickPlayer = (team, preferred = []) => {
 };
 
 const pickScorer = team => pickPlayer(team, ['DEL', 'MED']).name;
+const featuredPlayer = team => {
+  const players = team.players?.length ? team.players : team.scorers || [];
+  if (!players.length) return { name: team.name, rating: Math.round(team.strength || 80), position: 'XI' };
+  return [...players].sort((a, b) => (b.rating || 0) - (a.rating || 0))[0];
+};
+
 const pickAssistant = (team, scorer) => {
   const all = team.players?.length ? team.players : team.scorers || [];
   const pool = all.filter(p => p.name !== scorer && p.position !== 'ARQ');
@@ -360,6 +375,7 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
     crowd: clamp(.06 + round * .045 + Math.max(0, rivalTeam.strength - 90) * .004, .05, .24)
   }), [round, rivalTeam.strength]);
 
+  const [kickoffReady, setKickoffReady] = useState(false);
   const [minute, setMinute] = useState(0);
   const [moment, setMoment] = useState(null);
   const [needle, setNeedle] = useState(0);
@@ -430,7 +446,7 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
   }, [a, b, round, userSide]);
 
   const halftimePrompt = minute >= 45 && minute < 90 && tactic === null && !moment && !flash && !shootout?.active;
-  const paused = !!moment || !!flash || !!shootout?.active || halftimePrompt;
+  const paused = !kickoffReady || !!moment || !!flash || !!shootout?.active || halftimePrompt;
   const finished = minute >= 90 && !moment && !flash;
   const teamName = side => side === 0 ? a.name : b.name;
 
@@ -460,6 +476,17 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
     : userTeam.strength || 80;
   const roleBonus = moment ? (ROLE_BONUS[moment.game]?.[moment.attack ? moment.player?.position : 'ARQ'] || 0) : 0;
   const composure = clamp(relevantSkill + roleBonus + momentum * 2.5 - matchPressure * 22 - fatigue * 18, 55, 103);
+  const skillImpact = relevantSkill >= 90 ? 'VENTAJA TÉCNICA' : relevantSkill >= 82 ? 'BUEN CONTROL' : relevantSkill <= 72 ? 'MUY EXIGENTE' : 'NEUTRO';
+
+  const getLongshotAim = tick => {
+    const control = clamp(1.06 - (relevantSkill - 80) * .0048, .92, 1.16);
+    const xAmp = clamp(52 - (relevantSkill - 80) * .1, 49, 55);
+    const yAmp = clamp(47 - (relevantSkill - 80) * .08, 44, 50);
+    return {
+      x: 50 + xAmp * Math.sin(tick * .142 * control),
+      y: 49 + yAmp * Math.sin(tick * .101 * control + 1.15)
+    };
+  };
 
   const timingProfile = (m, currentStep) => {
     const profiles = {
@@ -588,7 +615,8 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
     if (!moment || moment.game !== 'counter' || !moment.attack) return;
     const waves = moment.counterWaves?.length ? moment.counterWaves : [[moment.pressureLane]];
     const blockers = waves[counterWave] || waves[waves.length - 1];
-    const duration = clamp((1750 - counterWave * 135) * skillScale(composure) / dynamicDifficulty, 820, 1900);
+    const counterSkill = relevantPlayerSkill(moment.player, 'counter');
+    const duration = clamp((1700 - counterWave * 135) * skillScale(counterSkill) / dynamicDifficulty, 800, 1980);
     const started = Date.now();
     setCounterProgress(0);
 
@@ -684,8 +712,7 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
 
   const shootLongShot = () => {
     if (!moment || moment.game !== 'longshot') return;
-    const x = 50 + 52 * Math.sin(aimTick * .142);
-    const y = 49 + 47 * Math.sin(aimTick * .101 + 1.15);
+    const { x, y } = getLongshotAim(aimTick);
 
     // The goal is only part of the aiming area: from distance it is easy to miss the frame.
     const inGoal = x >= 13 && x <= 87 && y >= 12 && y <= 78;
@@ -722,8 +749,11 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
     if (!moment || moment.game !== 'freekick' || !target) return;
 
     const desiredCurve = target.x < 42 ? -38 : target.x > 58 ? 38 : 0;
-    const powerQuality = clamp(1 - Math.abs(up - 128) / 78, 0, 1);
-    const curveQuality = clamp(1 - Math.abs(dx - desiredCurve) / 78, 0, 1);
+    const fkSkill = relevantPlayerSkill(moment.player, 'freekick');
+    const powerTolerance = clamp(70 + (fkSkill - 80) * .72, 60, 84);
+    const curveTolerance = clamp(70 + (fkSkill - 80) * .68, 60, 84);
+    const powerQuality = clamp(1 - Math.abs(up - 128) / powerTolerance, 0, 1);
+    const curveQuality = clamp(1 - Math.abs(dx - desiredCurve) / curveTolerance, 0, 1);
     const leftCorner = Math.hypot(target.x - 16, target.y - 16);
     const rightCorner = Math.hypot(target.x - 84, target.y - 16);
     const cornerDistance = Math.min(leftCorner, rightCorner);
@@ -732,8 +762,8 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
     const tooWeak = up < 72;
     const tooStrong = up > 188;
     const quality = placementQuality * .48 + powerQuality * .32 + curveQuality * .2;
-    const skillEdge = (composure - 80) * .0025;
-    const required = clamp(.74 + (dynamicDifficulty - 1) * .035 - skillEdge, .68, .82);
+    const skillEdge = (fkSkill - 80) * .0031;
+    const required = clamp(.75 + (dynamicDifficulty - 1) * .035 - skillEdge, .67, .83);
     const success = !centralLow && !tooWeak && !tooStrong && quality >= required;
     const lane = target.x < 36 ? 0 : target.x > 64 ? 2 : 1;
 
@@ -922,6 +952,27 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
   const laneLabelsForMoment = moment?.game === 'cross' ? CROSS_LANES : LANES;
   const needsLane = currentTiming && selectedLane === null;
 
+  const homeStar = featuredPlayer(a);
+  const awayStar = featuredPlayer(b);
+  const finalStatEvents = [
+    ...script.eventsA.map(event => ({ type: 'goal', teamId: a.id, player: event.scorer, value: 1 })),
+    ...script.eventsB.map(event => ({ type: 'goal', teamId: b.id, player: event.scorer, value: 1 })),
+    ...statEvents.current
+  ].filter(event => event.player);
+  const impactRows = Object.values(finalStatEvents.reduce((acc, event) => {
+    const key = event.teamId + '::' + event.player;
+    acc[key] ||= { player: event.player, teamId: event.teamId, goals: 0, assists: 0, saves: 0, score: 0 };
+    const value = event.value || 1;
+    if (event.type === 'goal') { acc[key].goals += value; acc[key].score += 4 * value; }
+    if (event.type === 'assist') { acc[key].assists += value; acc[key].score += 2.2 * value; }
+    if (event.type === 'save') { acc[key].saves += value; acc[key].score += .75 * value; }
+    return acc;
+  }, {}));
+  const playerOfMatch = impactRows.sort((x, y) => y.score - x.score || y.goals - x.goals)[0] || null;
+  const scorerLines = [...log.filter(event => event.goal), ...events.filter(event => event.m <= minute)]
+    .sort((x, y) => x.m - y.m)
+    .slice(0, 8);
+
   const renderMoment = () => {
     if (!moment) return null;
     const clutch = moment.clutch || minute >= 85;
@@ -937,10 +988,14 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
       </div>
 
       <div className="moment-variables">
+        <span className="skill-live"><b>{Math.round(relevantSkill)}</b> {GAME_SKILL_LABELS[moment.game] || 'TÉCNICA'}</span>
         <span><b>{Math.round(composure)}</b> COMPOSTURA</span>
         <span><b>{Math.round(matchPressure * 100)}</b> PRESIÓN</span>
         <span><b>{Math.round(fatigue * 100)}</b> FATIGA</span>
         <span><b>{momentum > 0 ? '+' + momentum : momentum}</b> MOMENTO</span>
+      </div>
+      <div className={'skill-impact ' + (relevantSkill >= 88 ? 'positive' : relevantSkill <= 72 ? 'negative' : '')}>
+        {moment.player?.name || moment.keeper?.name} · {skillImpact}
       </div>
 
       {moment.game === 'penal' && moment.attack && <>
@@ -965,8 +1020,8 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
       {moment.game === 'longshot' && moment.attack && <>
         <p>Es un remate de muy lejos: la mira va <b>más rápido y también sale del arco</b>. Si frenás afuera, la tirás afuera. Si la dejás adentro pero al medio, el arquero tiene ventaja.</p>
         <LongShotAimStage
-          aimX={50 + 52 * Math.sin(aimTick * .142)}
-          aimY={49 + 47 * Math.sin(aimTick * .101 + 1.15)}
+          aimX={getLongshotAim(aimTick).x}
+          aimY={getLongshotAim(aimTick).y}
           onShoot={shootLongShot}
         />
       </>}
@@ -1055,6 +1110,36 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
     </div>;
   };
 
+  if (!kickoffReady) return <div className="match-sim match-broadcast-intro">
+    <div className="broadcast-kicker"><span>CRACK SPORTS</span><b>{ROUND_NAMES[round] || 'PARTIDO'}</b></div>
+    <div className="broadcast-stage">
+      <div className="broadcast-team">
+        <small>{a.isAuctionTeam ? (a.isBot ? 'BOTACIONAL' : 'TU EQUIPO') : 'LEYENDA'}</small>
+        <h2>{a.name}</h2>
+        <strong>{a.strength.toFixed?.(1) || a.strength}</strong>
+        <span>NIVEL</span>
+        <div><b>{homeStar.name}</b><small>{homeStar.position} · {homeStar.rating}</small></div>
+      </div>
+      <div className="broadcast-vs"><span>VS</span><small>{environment.tempo.name}<br/>CÉSPED {environment.surface.name}</small></div>
+      <div className="broadcast-team">
+        <small>{b.isAuctionTeam ? (b.isBot ? 'BOTACIONAL' : 'TU EQUIPO') : 'LEYENDA'}</small>
+        <h2>{b.name}</h2>
+        <strong>{b.strength.toFixed?.(1) || b.strength}</strong>
+        <span>NIVEL</span>
+        <div><b>{awayStar.name}</b><small>{awayStar.position} · {awayStar.rating}</small></div>
+      </div>
+    </div>
+    <div className="broadcast-notes">
+      <span><b>{Math.round(myMetrics.attack)}</b> ATAQUE</span>
+      <span><b>{Math.round(myMetrics.midfield)}</b> MEDIO</span>
+      <span><b>{Math.round(myMetrics.defense)}</b> DEFENSA</span>
+      <span><b>{Math.round(myMetrics.keeper)}</b> ARQ</span>
+    </div>
+    <button className="primary-button broadcast-start" onClick={() => { playFeedback('reveal'); setKickoffReady(true); }}>
+      <Swords size={17} />Entrar a la cancha
+    </button>
+  </div>;
+
   return <div className="match-sim">
     <div className="sim-board">
       <div className={'sim-team ' + (a.isHuman ? 'me' : '')}><strong>{a.name}</strong><span>{a.isAuctionTeam ? (a.isBot ? 'BOTACIONAL' : 'SUBASTADO') : 'LEYENDA'}</span></div>
@@ -1109,9 +1194,14 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
 
     {renderShootout()}
 
-    {finished && !shootout?.active && <div className="sim-final">
-      <strong>{goalsA === goalsB ? 'EMPATE. NOS VAMOS A PENALES.' : 'FINAL DEL PARTIDO'}</strong>
-      <p>{goalsA === goalsB ? 'Acá ya no decide el simulador: pateás y atajás vos.' : 'Nivel, posiciones, arquero, césped, ritmo, presión, fatiga, momento y tus decisiones movieron el partido.'}</p>
+    {finished && !shootout?.active && <div className="sim-final post-match-show">
+      <span className="post-match-kicker">CRACK SPORTS · FINAL</span>
+      <strong>{goalsA === goalsB ? 'EMPATE. NOS VAMOS A PENALES.' : a.name + ' ' + goalsA + '–' + goalsB + ' ' + b.name}</strong>
+      {scorerLines.length > 0 && <div className="post-match-scorers">
+        {scorerLines.map((event, i) => <span key={i}><b>{event.m}′</b> {event.scorer || teamName(event.side)}</span>)}
+      </div>}
+      {playerOfMatch && <div className="post-match-mvp"><small>FIGURA CRACK</small><b>{playerOfMatch.player}</b><span>{playerOfMatch.goals} G · {playerOfMatch.assists} A · {playerOfMatch.saves} ATJ</span></div>}
+      <p>{goalsA === goalsB ? 'Acá ya no decide el simulador: pateás y atajás vos.' : 'Lo que compraste en la subasta ahora pesa en cada situación: técnica, velocidad, pase, definición y arquero.'}</p>
       {goalsA === goalsB
         ? <button className="primary-button" onClick={startShootout}><Target size={16} />Jugar los penales</button>
         : <button className="primary-button" onClick={finish}><Swords size={16} />Continuar</button>}
