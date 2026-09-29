@@ -610,3 +610,21 @@
   .counter-runner-pitch{height:255px}
   .counter-runner-controls{grid-template-columns:88px 1fr 88px}
 }
+
+
+/* Long-shot distance tuning v23 */
+.longshot-aim-stage{overflow:hidden}
+.longshot-aim-arena{position:relative;height:230px;margin:0 -4px;background:radial-gradient(circle at 50% 35%,#24301f,#12170f 68%);overflow:hidden}
+.longshot-aim-arena .longshot-aim-goal{position:absolute;left:13%;right:13%;top:12%;height:66%;width:auto;margin:0}
+.longshot-aim-arena .longshot-reticle{z-index:12}
+.longshot-aim-arena .longshot-result-ball{z-index:13}
+.longshot-aim-arena:before{content:'';position:absolute;left:50%;bottom:-1px;width:78%;height:42%;transform:translateX(-50%);border:1px solid #ffffff1f;border-bottom:0;border-radius:120px 120px 0 0;pointer-events:none}
+.longshot-aim-arena:after{content:'FUERA DEL ARCO';position:absolute;right:7px;bottom:7px;font-size:5px;letter-spacing:.8px;color:#7c8975;pointer-events:none}
+.longshot-aim-stage .longshot-aim-field{margin:0}
+.longshot-reticle{transition:none}
+.longshot-result-ball.save{animation-name:aim-ball-save}
+
+@media(max-width:720px){
+  .longshot-aim-arena{height:195px}
+  .longshot-aim-arena .longshot-aim-goal{top:12%;height:66%}
+}
