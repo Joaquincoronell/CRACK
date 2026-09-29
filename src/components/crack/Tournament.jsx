@@ -85,7 +85,7 @@ export default function Tournament({ game, dispatch }) {
     return <div key={key} className={'bracket-match' + (pendingHere ? ' current' : '') + (result ? ' played' : '')}>
       <div><span>{aTeam?.name || 'POR DEFINIR'}</span><b>{result ? result.goalsA : '—'}</b></div>
       <div><span>{bTeam?.name || 'POR DEFINIR'}</span><b>{result ? result.goalsB : '—'}</b></div>
-      {result?.goalsA === result?.goalsB && <small>PEN. {result.pensA}–{result.pensB}</small>}
+      {result && result.goalsA === result.goalsB && <small>PEN. {result.pensA}–{result.pensB}</small>}
     </div>;
   };
 
