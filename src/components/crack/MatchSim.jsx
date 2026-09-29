@@ -39,6 +39,14 @@ const ROLE_BONUS = {
 };
 
 const rand = n => Math.floor(Math.random() * n);
+const shuffleValues = values => {
+  const out = [...values];
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = rand(i + 1);
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
+};
 const makeBadPenaltyZones = () => {
   const first = rand(6);
   let second = rand(5);
@@ -397,7 +405,7 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
       const longshotBlocks = game === 'longshot' ? makeDistinctZones(4) : [0, 1];
       const counterPressures = game === 'counter' ? makeDistinctZones(3) : [0, 1];
       const counterWaves = game === 'counter'
-        ? Array.from({ length: 5 }, (_, wave) => shuffle([0, 1, 2]).slice(0, wave >= 2 && wave % 2 === 0 ? 2 : 1))
+        ? Array.from({ length: 5 }, (_, wave) => shuffleValues([0, 1, 2]).slice(0, wave >= 2 && wave % 2 === 0 ? 2 : 1))
         : [];
       return {
         id: i + '-' + game,
