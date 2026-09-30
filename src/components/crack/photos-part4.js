@@ -12,7 +12,7 @@ export default {
   "Ricardo Bochini": ["https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4e/Ricardo_Bochini.jpg/330px-Ricardo_Bochini.jpg", "https://commons.wikimedia.org/wiki/File:Ricardo_Bochini.jpg"],
   "Luquitas Rodríguez": ["/players/luquitas-rodriguez.jpg", ""],
   "Esteban Cambiasso": ["https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ab/Argentine_-_Portugal_-_Esteban_Cambiasso.jpg/330px-Argentine_-_Portugal_-_Esteban_Cambiasso.jpg", "https://commons.wikimedia.org/wiki/File:Argentine_-_Portugal_-_Esteban_Cambiasso.jpg"],
-  "Fernando Redondo": ["https://thumb.wikimedia.org/wikipedia/commons/thumb/7/76/Retrat_de_Fernando_Redondo.jpg/330px-Retrat_de_Fernando_Redondo.jpg", "https://commons.wikimedia.org/wiki/File:Retrat_de_Fernando_Redondo.jpg"],
+  "Fernando Redondo": ["https://upload.wikimedia.org/wikipedia/commons/3/3e/%D0%A4%D0%B5%D1%80%D0%BD%D0%B0%D0%BD%D0%B4%D0%BE_%D0%A0%D0%B5%D0%B4%D0%BE%D0%BD%D0%B4%D0%BE_2019.png", "https://commons.wikimedia.org/wiki/File:%D0%A4%D0%B5%D1%80%D0%BD%D0%B0%D0%BD%D0%B4%D0%BE_%D0%A0%D0%B5%D0%B4%D0%BE%D0%BD%D0%B4%D0%BE_2019.png"],
   "Michael Laudrup": ["https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2f/Michael_Laudrup.jpg/330px-Michael_Laudrup.jpg", "https://commons.wikimedia.org/wiki/File:Michael_Laudrup.jpg"],
   "Jay-Jay Okocha": ["https://upload.wikimedia.org/wikipedia/commons/8/83/Jj_okocha.jpg", "https://commons.wikimedia.org/wiki/File:Jj_okocha.jpg"],
   "Diego Simeone": ["https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8c/Diego_Simeone_-_01.jpg/330px-Diego_Simeone_-_01.jpg", "https://commons.wikimedia.org/wiki/File:Diego_Simeone_-_01.jpg"],
