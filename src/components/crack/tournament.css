@@ -853,3 +853,19 @@
   .broadcast-team>div small{font-size:7px}
   .broadcast-vs small{font-size:5.5px}
 }
+.penalty-tv-board{margin:0 auto 24px;padding:16px;background:#10170f;border:1px solid #52613f;border-radius:10px;text-align:left;color:#f4f7ef;max-width:680px}
+.penalty-tv-row{padding:12px 0;border-bottom:1px solid #35422d}
+.penalty-tv-team{display:flex;align-items:center;justify-content:space-between;gap:16px;font-weight:800;font-size:16px;margin-bottom:10px}
+.penalty-tv-team span{overflow-wrap:anywhere}
+.penalty-tv-team>b{font-size:24px;line-height:1;color:#c1fa41}
+.penalty-tv-row.taking .penalty-tv-team span::before{content:'▶ ';color:#c1fa41}
+.penalty-tv-kicks{display:flex;gap:8px;flex-wrap:wrap}
+.penalty-tv-kick{display:flex;flex-direction:column;align-items:center;justify-content:center;width:44px;min-height:56px;border:1px solid #647057;border-radius:5px;background:#263021;color:#abb6a1}
+.penalty-tv-kick small{font-size:12px;line-height:1.2}
+.penalty-tv-kick b{font-size:24px;line-height:1.2}
+.penalty-tv-kick.scored{background:#264a1c;color:#d3ffa8;border-color:#83c94c}
+.penalty-tv-kick.missed{background:#50251f;color:#ffd1c9;border-color:#eb8270}
+.penalty-tv-kick.current{border:2px solid #eacf80;color:#ffe5a4;background:#413919}
+.penalty-tv-kick.sudden-start{margin-left:8px}
+.penalty-tv-legend{margin-top:12px;font-size:12px;font-weight:700;color:#c4cdbb}
+@media(max-width:480px){.penalty-tv-board{padding:12px}.penalty-tv-kicks{gap:6px}.penalty-tv-kick{width:36px;min-height:50px}.penalty-tv-team{font-size:14px}}

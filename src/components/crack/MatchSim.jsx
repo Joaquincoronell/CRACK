@@ -390,6 +390,9 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
   const [shootout, setShootout] = useState(null);
   const [shootDir, setShootDir] = useState(null);
   const [shootFlash, setShootFlash] = useState(null);
+  const shootoutBusy = useRef(false);
+  const shootoutTimer = useRef(null);
+  useEffect(() => () => clearTimeout(shootoutTimer.current), []);
   const [tactic, setTactic] = useState(null);
   const [aimTick, setAimTick] = useState(0);
   const [freeKickTarget, setFreeKickTarget] = useState(null);
@@ -836,6 +839,8 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
   };
 
   const startShootout = () => {
+    clearTimeout(shootoutTimer.current);
+    shootoutBusy.current = false;
     setShootDir(null);
     setShootFlash(null);
     setNeedle(0);
@@ -845,6 +850,8 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
       b: 0,
       kicksA: 0,
       kicksB: 0,
+      historyA: [],
+      historyB: [],
       turn: 0,
       done: false,
       winner: null,
@@ -856,20 +863,27 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
   const userShooting = shootout?.active && shootSide === userSide;
 
   const recordShootoutKick = goal => {
+    const expectedTurn = shootout.turn;
+    const badZones = makeBadPenaltyZones();
     setShootout(s => {
+      if (!s || s.done || s.turn !== expectedTurn) return s;
       const side = s.turn % 2;
       const next = {
         ...s,
         a: s.a + (side === 0 && goal ? 1 : 0),
         b: s.b + (side === 1 && goal ? 1 : 0),
         kicksA: s.kicksA + (side === 0 ? 1 : 0),
-        kicksB: s.kicksB + (side === 1 ? 1 : 0)
+        kicksB: s.kicksB + (side === 1 ? 1 : 0),
+        historyA: side === 0 ? [...s.historyA, goal] : s.historyA,
+        historyB: side === 1 ? [...s.historyB, goal] : s.historyB
       };
       const remA = Math.max(0, 5 - next.kicksA);
       const remB = Math.max(0, 5 - next.kicksB);
       let winner = null;
-      if (next.a > next.b + remB) winner = 0;
-      if (next.b > next.a + remA) winner = 1;
+      if (next.kicksA < 5 || next.kicksB < 5) {
+        if (next.a > next.b + remB) winner = 0;
+        if (next.b > next.a + remA) winner = 1;
+      }
       if (next.kicksA >= 5 && next.kicksB >= 5 && next.kicksA === next.kicksB && next.a !== next.b) winner = next.a > next.b ? 0 : 1;
       if (winner !== null) return { ...next, done: true, winner };
 
@@ -877,7 +891,7 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
       return {
         ...next,
         turn: nextTurn,
-        badZones: nextTurn % 2 === userSide ? makeBadPenaltyZones() : next.badZones
+        badZones: nextTurn % 2 === userSide ? badZones : next.badZones
       };
     });
     setShootDir(null);
@@ -885,7 +899,8 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
   };
 
   const shootPenaltyZone = zone => {
-    if (!shootout?.active || shootout.done || !userShooting || shootFlash) return;
+    if (!shootout?.active || shootout.done || !userShooting || shootFlash || shootoutBusy.current) return;
+    shootoutBusy.current = true;
     const badZones = shootout.badZones || [];
     const goal = !badZones.includes(zone);
     setShootDir(zone);
@@ -896,14 +911,16 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
       badZones,
       playerKick: true
     });
-    setTimeout(() => {
+    shootoutTimer.current = setTimeout(() => {
       setShootFlash(null);
       recordShootoutKick(goal);
+      shootoutBusy.current = false;
     }, 1050);
   };
 
   const resolveRivalPenalty = () => {
-    if (!shootout?.active || shootout.done || userShooting || shootFlash) return;
+    if (!shootout?.active || shootout.done || userShooting || shootFlash || shootoutBusy.current) return;
+    shootoutBusy.current = true;
     // El remate rival se resuelve al azar: 70% gol, 30% fallo.
     const goal = Math.random() < .7;
     const zone = rand(6);
@@ -913,9 +930,10 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
       zone,
       rivalKick: true
     });
-    setTimeout(() => {
+    shootoutTimer.current = setTimeout(() => {
       setShootFlash(null);
       recordShootoutKick(goal);
+      shootoutBusy.current = false;
     }, 1050);
   };
 
@@ -1089,11 +1107,33 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
   const renderShootout = () => {
     if (!shootout?.active) return null;
     const sideName = shootSide === 0 ? a.name : b.name;
+    const histories = [shootout.historyA, shootout.historyB].map((history, side) =>
+      shootFlash && shootSide === side ? [...history, shootFlash.goal] : history
+    );
+    const scores = histories.map(history => history.filter(Boolean).length);
+    const extraKicks = Math.max(0, ...histories.map(history => history.length - 5),
+      !shootout.done && !shootFlash ? Math.floor(shootout.turn / 2) - 4 : 0);
     return <div className="shootout-box">
       <div className="shootout-head">
         <span>PENALES</span>
-        <strong>{shootout.a}–{shootout.b}</strong>
-        <small>{shootout.kicksA} / {shootout.kicksB} ejecutados</small>
+        <strong>{scores[0]}–{scores[1]}</strong>
+        <small>{shootout.done ? 'FINAL' : shootout.turn >= 10 ? 'MUERTE SÚBITA' : 'SERIE DE 5'}</small>
+      </div>
+      <div className="penalty-tv-board" aria-label="Marcador de penales" aria-live="polite">
+        {[a, b].map((team, side) => <div className={'penalty-tv-row' + (!shootout.done && shootSide === side ? ' taking' : '')} key={side}>
+          <div className="penalty-tv-team"><span>{team.name}</span><b>{scores[side]}</b></div>
+          <div className="penalty-tv-kicks">
+            {Array.from({ length: 5 + extraKicks }, (_, index) => {
+              const result = histories[side][index];
+              const current = !shootout.done && !shootFlash && shootSide === side && index === histories[side].length;
+              const label = result === true ? 'gol' : result === false ? 'fallado' : current ? 'en curso' : 'pendiente';
+              return <span key={index} className={'penalty-tv-kick ' + (result === true ? 'scored' : result === false ? 'missed' : current ? 'current' : 'pending') + (index === 5 ? ' sudden-start' : '')} aria-label={'Penal ' + (index + 1) + ': ' + label}>
+                <small>{index + 1}</small><b>{result === true ? '✓' : result === false ? '×' : current ? '●' : '–'}</b>
+              </span>;
+            })}
+          </div>
+        </div>)}
+        <div className="penalty-tv-legend">✓ GOL · × FALLO · ● EN CURSO</div>
       </div>
 
       {shootout.done ? <>
@@ -1211,7 +1251,7 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
         {scorerLines.map((event, i) => <span key={i}><b>{event.m}′</b> {event.scorer || teamName(event.side)}</span>)}
       </div>}
       {playerOfMatch && <div className="post-match-mvp"><small>FIGURA CRACK</small><b>{playerOfMatch.player}</b><span>{playerOfMatch.goals} G · {playerOfMatch.assists} A · {playerOfMatch.saves} ATJ</span></div>}
-      <p>{goalsA === goalsB ? 'Acá ya no decide el simulador: pateás y atajás vos.' : 'Lo que compraste en la subasta ahora pesa en cada situación: técnica, velocidad, pase, definición y arquero.'}</p>
+      <p>{goalsA === goalsB ? 'Cinco penales por equipo. Vos elegís dónde patear; el rival ejecuta automáticamente. Si siguen empatados, van a muerte súbita.' : 'Lo que compraste en la subasta ahora pesa en cada situación: técnica, velocidad, pase, definición y arquero.'}</p>
       {goalsA === goalsB
         ? <button className="primary-button" onClick={startShootout}><Target size={16} />Jugar los penales</button>
         : <button className="primary-button" onClick={finish}><Swords size={16} />Continuar</button>}
