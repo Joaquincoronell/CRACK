@@ -796,7 +796,16 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
   };
 
   const chooseCross = lane => {
-    if (selectedLane !== null) return;
+    if (!moment || moment.game !== 'cross' || selectedLane !== null) return;
+    if (lane !== moment.targetLane) {
+      finishMoment(
+        false,
+        '¡CENTRO A NADIE!',
+        'No había receptor en esa zona. La zona correcta era ' + CROSS_LANES[moment.targetLane] + '.',
+        { lane }
+      );
+      return;
+    }
     setSelectedLane(lane);
     setNeedle(0);
   };
@@ -1061,7 +1070,7 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
       {moment.game === 'cross' && moment.attack && <>
         <p>{selectedLane === null
           ? <>Elegí una de las <b>3 zonas misteriosas</b>. Solo una tiene al receptor: 1 de 3.</>
-          : <>Zona elegida. Ahora clavá la <b>potencia</b> · dificultad 8.5/10.</>}</p>
+          : <>¡Encontraste al receptor! Ahora clavá la <b>potencia</b> · dificultad 8.5/10.</>}</p>
         <CrossChoiceStage selectedLane={selectedLane} onPick={selectedLane === null ? chooseCross : null} />
         {selectedLane !== null && currentTiming && <div className="skill-execution hard-execution">
           <div className="timing-label">{currentTiming.label} · DIF. 8.5/10</div>
