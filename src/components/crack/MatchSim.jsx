@@ -378,6 +378,7 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
   const [kickoffReady, setKickoffReady] = useState(false);
   const [minute, setMinute] = useState(0);
   const [moment, setMoment] = useState(null);
+  const [momentStarted, setMomentStarted] = useState(false);
   const [needle, setNeedle] = useState(0);
   const [step, setStep] = useState(0);
   const [timingHits, setTimingHits] = useState([]);
@@ -503,6 +504,7 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
 
   const clearMoment = () => {
     setMoment(null);
+    setMomentStarted(false);
     setStep(0);
     setTimingHits([]);
     setSelectedLane(null);
@@ -584,6 +586,8 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
       counterLaneRef.current = 1;
       setCounterWave(0);
       setCounterProgress(0);
+      setMomentStarted(false);
+      setReactionCue(false);
       setMoment(next);
     }
   }, [minute, paused, plan]);
@@ -612,7 +616,7 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
   }, [moment?.id]);
 
   useEffect(() => {
-    if (!moment || moment.game !== 'counter' || !moment.attack) return;
+    if (!moment || moment.game !== 'counter' || !moment.attack || !momentStarted) return;
     const waves = moment.counterWaves?.length ? moment.counterWaves : [[moment.pressureLane]];
     const blockers = waves[counterWave] || waves[waves.length - 1];
     const counterSkill = relevantPlayerSkill(moment.player, 'counter');
@@ -646,10 +650,10 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
       clearInterval(timer);
       clearTimeout(collision);
     };
-  }, [moment?.id, counterWave]);
+  }, [moment?.id, counterWave, momentStarted]);
 
   useEffect(() => {
-    if (!moment || moment.game !== 'save') return;
+    if (!moment || moment.game !== 'save' || !momentStarted) return;
     setReactionCue(false);
     const prep = setTimeout(() => {
       setReactionCue(true);
@@ -662,7 +666,7 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
       clearTimeout(prep);
       if (reactionTimeout.current) clearTimeout(reactionTimeout.current);
     };
-  }, [moment?.id]);
+  }, [moment?.id, momentStarted]);
 
   const stopTiming = () => {
     if (!moment || !currentTiming || selectedLane === null) return;
@@ -795,6 +799,7 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
   };
 
   const moveCounterLane = lane => {
+    if (!momentStarted) return;
     const nextLane = clamp(lane, 0, 2);
     counterLaneRef.current = nextLane;
     setCounterLane(nextLane);
@@ -1054,19 +1059,24 @@ export default function MatchSim({ a, b, script, round = 0, onFinish }) {
 
       {moment.game === 'counter' && moment.attack && <>
         <p>La pelota arranca por el medio. <b>Cambiala de carril mientras vienen los defensores.</b> Si uno llega a tu carril, perdés la contra. Sobreviví las 5 oleadas.</p>
-        <CounterLaneStage
+        {!momentStarted ? <>
+          <p>Cuando estés listo, tocá Play para empezar.</p>
+          <button type="button" className="moment-btn" onClick={() => setMomentStarted(true)}>▶ PLAY</button>
+        </> : <CounterLaneStage
           lane={counterLane}
           blockers={moment.counterWaves?.[counterWave] || [moment.pressureLane]}
           progress={counterProgress}
           wave={counterWave}
           total={moment.counterWaves?.length || 5}
           onLane={moveCounterLane}
-        />
+        />}
       </>}
 
       {moment.game === 'save' && <>
-        <p>{reactionCue ? '¡YA! Seguí la pelota y tirate.' : 'No te tires antes. Esperá a ver salir la pelota.'}</p>
-        <GoalStage mode="save" keeperLane={1} targetLane={moment.targetLane} live={reactionCue} onPick={reactionCue ? chooseSave : null} defensive />
+        <p>{!momentStarted ? 'Tocá Play cuando estés listo. Después esperá a ver salir la pelota y tirate hacia su lado.' : reactionCue ? '¡YA! Seguí la pelota y tirate.' : 'No te tires antes. Esperá a ver salir la pelota.'}</p>
+        {!momentStarted
+          ? <button type="button" className="moment-btn" onClick={() => setMomentStarted(true)}>▶ PLAY</button>
+          : <GoalStage mode="save" keeperLane={1} targetLane={moment.targetLane} live={reactionCue} onPick={reactionCue ? chooseSave : null} defensive />}
       </>}
 
       {moment.game === 'penal' && !moment.attack && <>
